@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lecture Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header>
+    <div style="display: flex; align-items: center; width: 100%;">
+        <h1 style="margin: 0; padding-left: 5%; text-align: left; width: 80%;">Lecture Tracker</h1>
+        <div class="menu-button" id="menuButton" style="margin-left: auto; padding-right: 5%;">
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            </div>
+        </div>
+    <nav class="menu" id="menu">
+        <button onclick="toggleTodoPopup()">To-Do List</button>
+        <button class="open-chapter-modal">Add Chapter</button>
+        <button class="open-resource-modal">Add Resource</button>
+        <button onclick="exportData()">Export to JSON</button>
+        <button onclick="document.getElementById('import-file').click()">Import from JSON</button>
+        <input type="file" id="import-file" accept=".json" style="display: none;" onchange="importData(event)" />
+        <button id="settings-button" onclick="toggleSettingsPopup()">Settings</button>
+        <button onclick="togglePdfNotesPopup()">PDF Notes</button>
+        <button onclick="toggleTimetablePopup()">Time</button>
+        <button onclick="togglePomodoroPopup()">Pomodoro Timer</button>
+        <button id="showCalendarButton">Calendar</button>
+        <button onclick="toggleSubjectManagement()">Manage Subjects</button>
+    </nav>
+</header>
+
+<div class="container" id="lectureContainer" style="width: 80%; margin-left: 1%; margin-right: 1%;">
+    <div class="subject-section" id="math">
+        <h2>Mathematics</h2>
+        <div id="math-chapters"></div>
+    </div>
+    <div class="subject-section" id="physics">
+        <h2>Physics</h2>
+        <div id="physics-chapters"></div>
+    </div>
+    <div class="subject-section" id="chemistry">
+        <h2>Physical Chemistry</h2>
+        <div id="chemistry-chapters"></div>
+    </div>
+    <div class="subject-section" id="organic">
+        <h2>Organic Chemistry</h2>
+        <div id="organic-chapters"></div>
+    </div>
+    <div class="subject-section" id="inorganic">
+        <h2>Inorganic Chemistry</h2>
+        <div id="inorganic-chapters"></div>
+    </div>
+</div>
+
+<!-- New section for resources -->
+<h2 class="resourcesh2" style="width: 80%; margin-left: 1%; margin-right: 1%;">Resources</h2>
+<div id="resources-section" class="resource-container" style="width: 80%; margin-left: 1%; margin-right: 1%;">
+    <div id="math-resources" class="resource-box"></div>
+    <div id="chemistry-resources" class="resource-box"></div>
+    <div id="physics-resources" class="resource-box"></div>
+    <div id="organic-resources" class="resource-box"></div>
+    <div id="inorganic-resources" class="resource-box"></div>
+</div>
+
+<!-- Settings Popup Area -->
+<div class="popuparea" id="settings-popup-area" style="display: none;">
+    <div id="settings-popup" class="popup">
+        <h2 class="settingsh2">Settings</h2>
+        <div>
+            <h3>Data</h3>
+            <button onclick="exportData()">Export Data (Backup)</button>
+            <button onclick="document.getElementById('import-file').click()">Import from JSON</button>
+            <button class="exportcaltask" id="exportButton" style="padding: 10px 15px; border: none; margin-right: 0; border-radius: 5px; background: var(--background-color); color: var(--accent-color); font-weight: bold; transition: background 0.3s, transform 0.2s;">Export Calendar Tasks</button>
+
+        </div>
+        <div>
+            <h3>Theme</h3>
+            <select onchange="switchTheme(this.value)">
+                <option value="default">Default</option>
+                <option value="dark-mode">Dark Mode</option>
+            </select>
+        </div>
+        <div>
+            <h3>To-Do List Display</h3>
+            <select onchange="toggleTodoDisplay(this.value)">
+                <option value="list">List</option>
+                <option value="table">Table</option>
+            </select>
+        </div>
+        <div>
+            <h3>Folder Paths</h3>
+            <div>
+                <label for="math-folder">Mathematics:</label>
+                <input type="text" id="math-folder" placeholder="Path to Mathematics folder" />
+            </div>
+            <div>
+                <label for="physics-folder">Physics:</label>
+                <input type="text" id="physics-folder" placeholder="Path to Physics folder" />
+            </div>
+            <div>
+                <label for="chemistry-folder">Physical Chemistry:</label>
+                <input type="text" id="chemistry-folder" placeholder="Path to Physical Chemistry folder" />
+            </div>
+            <div>
+                <label for="organic-folder">Organic Chemistry:</label>
+                <input type="text" id="organic-folder" placeholder="Path to Organic Chemistry folder" />
+            </div>
+            <div>
+                <label for="inorganic-folder">Inorganic Chemistry:</label>
+                <input type="text" id="inorganic-folder" placeholder="Path to Inorganic Chemistry folder" />
+            </div>
+            <button onclick="saveFolderPaths()">Save Folder Paths</button>
+        </div>
+        <button onclick="toggleSettingsPopup()">Close</button>
+    </div>
+</div>
+
+<!-- Modal for adding chapter -->
+<div id="chapterModal" class="modal">
+    <div class="modal-content" style="z-index: 100000;">
+        <h2 class="chaptersh2">Add Chapter</h2>
+        <input type="text" id="chapter-name" placeholder="Chapter Name" />
+        <input type="text" id="lecture-link" placeholder="Lecture Link" />
+        <input type="number" id="total-lectures" placeholder="Total Lectures" />
+        <input type="number" id="current-lecture" placeholder="Current Lecture" />
+        <select id="subject-select">
+            <option value="math">Mathematics</option>
+            <option value="physics">Physics</option>
+            <option value="chemistry">Physical Chemistry</option>
+            <option value="organic">Organic Chemistry</option>
+            <option value="inorganic">Inorganic Chemistry</option>
+        </select>
+        <button onclick="addChapter()">Add Chapter</button>
+        <button class="close-modal" data-modal-id="chapterModal">Close</button>
+    </div>
+</div>
+
+<!-- Modal for adding resource -->
+<div id="resourceModal" class="modal" style="z-index: 100000;">
+    <div class="modal-content">
+        <h2 class="resourcesh2">Add Resource</h2>
+        <input type="text" id="resource-name" placeholder="Resource Name" />
+        <input type="text" id="resource-link" placeholder="Resource Link" />
+        <select id="resource-subject-select">
+            <option value="math">Mathematics</option>
+            <option value="physics">Physics</option>
+            <option value="chemistry">Physical Chemistry</option>
+            <option value="organic">Organic Chemistry</option>
+            <option value="inorganic">Inorganic Chemistry</option>
+        </select>
+        <button onclick="addResource()">Add Resource</button>
+        <button class="close-modal" data-modal-id="resourceModal">Close</button>
+    </div>
+</div>
+
+<!-- To-Do Popup -->
+<div class="popuparea" id="todo-popup" style="display: none; ">
+    <div class="popuptodo">
+        <h2 class="todoh2">To-Do List</h2>
+        <input type="text" id="todo-input" placeholder="Add a new task..." />
+        <input type="date" id="todo-due-date" placeholder="Due Date" />
+        <select id="todo-priority">
+            <option value="High">High</option>
+            <option value="Medium" selected>Medium</option>
+            <option value="Low">Low</option>
+        </select>
+        <button onclick="addTask()">Add Task</button>
+        <ul id="todo-list"></ul>
+        <table id="todo-table" class="todo-table" style="display: none;">
+            <thead>
+                <tr>
+                    <th>Task</th>
+                    <th>Due Date</th>
+                    <th>Priority</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="todo-table-body"></tbody>
+        </table>
+        <button onclick="saveTasks()">Save Tasks</button>
+        <button onclick="loadTasks()">Load Tasks</button>
+        <button onclick="toggleTodoPopup()">Close</button>
+    </div>
+</div>
+
+<!-- PDF Notes Popup -->
+<div class="popuparea" id="pdf-notes-popup" style="display: none; ">
+    <div class="popup">
+        <h2 class="pdfnotesh2">PDF Notes</h2>
+        <div id="pdf-notes-container"></div>
+        <button onclick="togglePdfNotesPopup()">Close</button>
+    </div>
+</div>
+
+<!-- Pomodoro Timer Popup -->
+<div class="popuparea" id="pomodoro-popup" style="display: none; ">
+    <div class="popup-content">
+        <h2 class="pomodoroh2">Timer Options</h2>
+        <div class="timer-options">
+            <button onclick="selectTimer('pomodoro')">Pomodoro</button>
+            <button onclick="selectTimer('countdown')">Countdown</button>
+            <button onclick="selectTimer('stopwatch')">Stopwatch</button>
+        </div>
+
+        <!-- Pomodoro Settings -->
+        <div id="pomodoro-settings" class="timer-settings" style="display: none;">
+            <h3>Pomodoro Timer</h3>
+            <label for="work-duration">Work Duration (minutes):</label>
+            <input type="number" id="work-duration" value="25" min="1" max="60">
+            <label for="short-break-duration">Short Break (minutes):</label>
+            <input type="number" id="short-break-duration" value="5" min="1" max="30">
+            <label for="long-break-duration">Long Break (minutes):</label>
+            <input type="number" id="long-break-duration" value="15" min="1" max="60">
+            <label for="session-count">Number of Sessions:</label>
+            <input type="number" id="session-count" value="4" min="1" max="10">
+            <div id="pomodoro-timer-display">25:00</div>
+            <button onclick="startPomodoro()">Start</button>
+            <button onclick="pausePomodoro()">Pause</button>
+            <button onclick="resetPomodoro()">Reset</button>
+            <div id="completed-sessions">Sessions Completed: 0</div>
+        </div>
+
+        <!-- Countdown Settings -->
+        <div id="countdown-settings" class="timer-settings" style="display: none;">
+            <h3>Countdown Timer</h3>
+            <label for="countdown-duration">Set Timer (minutes):</label>
+            <input type="number" id="countdown-duration" value="10" min="1" max="120">
+            <div id="countdown-timer-display">10:00</div>
+            <button onclick="startCountdown()">Start</button>
+            <button onclick="pauseCountdown()">Pause</button>
+            <button onclick="resetCountdown()">Reset</button>
+        </div>
+
+        <!-- Stopwatch Settings -->
+        <div id="stopwatch-settings" class="timer-settings" style="display: none;">
+            <h3>Stopwatch</h3>
+            <div id="stopwatch-timer-display">00:00</div>
+            <button onclick="startStopwatch()">Start</button>
+            <button onclick="pauseStopwatch()">Pause</button>
+            <button onclick="resetStopwatch()">Reset</button>
+        </div>
+
+        <button onclick="togglePomodoroPopup()">Close</button>
+    </div>
+</div>
+
+<!-- Time Table Popup -->
+<div class="popuparea" id="timetable-popup" style="display: none; ">
+    <div class="popup-content fullsize-scrollable" style="width: 100%; max-width: none;">
+        <h2 class="timetableh2">Time Table</h2>
+        <table class="timetable" style="width: 100%;">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Subject/Task</th>
+                    <th>Focus Area</th>
+                    <th>Done</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>04:00 – 06:00</td>
+                    <td>Mathematics</td>
+                    <td>New topics, theory, and questions</td>
+                    <td><input type="checkbox" class="task-checkbox" data-task="math-morning"></td>
+                </tr>
+                <tr>
+                    <td>06:00 – 08:00</td>
+                    <td>Physics</td>
+                    <td>New topics, theory, and questions</td>
+                    <td><input type="checkbox" class="task-checkbox" data-task="physics-morning"></td>
+                </tr>
+                <tr>
+                    <td>08:00 – 08:30</td>
+                    <td>Breakfast + Break</td>
+                    <td></td>
+                    <td><input type="checkbox" class="task-checkbox" data-task="breakfast"></td>
+                </tr>
+                <tr>
+                    <td>08:30 – 11:00</td>
+                    <td>Chemistry (Physical + Inorganic)</td>
+                    <td>Theory + numerical (Physical), reactions (Inorganic)</td>
+                    <td><input type="checkbox" class="task-checkbox" data-task="chem-morning"></td>
+                </tr>
+                <tr>
+                    <td>11:00 – 11:30</td>
+                    <td>Short Break/Nap</td>
+                    <td>Refresh</td>
+                    <td><input type="checkbox" class="task-checkbox" data-task="break-nap"></td>
+                </tr>
+                <tr>
+                    <td>11:30 – 14:30</td>
+                    <td>Mathematics (Problem Solving)</td>
+                    <td>Advanced questions, previous papers</td>
+                    <td><input type="checkbox" class="task-checkbox" data-task="math-afternoon"></td>
+                </tr>
+                <tr>
+                    <td>14:30 – 15:00</td>
+                    <td>Lunch</td>
+                    <td></td>
+                    <td><input type="checkbox" class="task-checkbox" data-task="lunch"></td>
+                </tr>
+                <tr>
+                    <td>15:00 – 18:00</td>
+                    <td>Physics (Problem Solving)</td>
+                    <td>Advanced questions, previous papers</td>
+                    <td><input type="checkbox" class="task-checkbox" data-task="physics-afternoon"></td>
+                </tr>
+                <tr>
+                    <td>18:00 – 19:00</td>
+                    <td>Chemistry (Organic)</td>
+                    <td>Reaction mechanisms, problem solving</td>
+                    <td><input type="checkbox" class="task-checkbox" data-task="chem-evening"></td>
+                </tr>
+                <tr>
+                    <td>19:00 – 19:30</td>
+                    <td>Dinner Break</td>
+                    <td></td>
+                    <td><input type="checkbox" class="task-checkbox" data-task="dinner"></td>
+                </tr>
+                <tr>
+                    <td>19:30 – 21:00</td>
+                    <td>Revision (Rotate Subjects)</td>
+                    <td>Daily revision of key topics</td>
+                    <td><input type="checkbox" class="task-checkbox" data-task="revision"></td>
+                </tr>
+                <tr>
+                    <td>21:00 – 22:00</td>
+                    <td>Mock Test (Optional)</td>
+                    <td>Timed JEE Main test</td>
+                    <td><input type="checkbox" class="task-checkbox" data-task="mock-test"></td>
+                </tr>
+                <tr>
+                    <td>22:00 – 22:30</td>
+                    <td>Wind down and Sleep</td>
+                    <td></td>
+                    <td><input type="checkbox" class="task-checkbox" data-task="sleep"></td>
+                </tr>
+                <!-- Add more rows as needed -->
+            </tbody>
+        </table>
+
+        <button onclick="clearCheckboxes()">Clear Checkboxes</button>
+        <button onclick="toggleTimetablePopup()">Close</button>
+    </div>
+</div>
+
+<!-- Add Chapter Popup -->
+<div class="popuparea" id="addChapterPopup">
+    <div class="popup-content">
+        <button id="closeAddChapterPopup">Close</button>
+        <!-- Add chapter form or content here -->
+    </div>
+</div>
+
+<!-- Resources Popup -->
+<div class="popuparea" id="resourcesPopup" >
+    <div class="popup-content">
+        <button id="closeResourcesPopup">Close</button>
+        <!-- Resources form or content here -->
+    </div>
+</div>
+
+
+
+<div id="taskPopup" style="display: none; ">
+    <h3>Add Task</h3>
+    <input type="text" id="taskTitle" placeholder="Task Title">
+    <textarea id="taskDescription" placeholder="Task Description"></textarea>
+    <button id="saveTask">Save Task</button>
+    <button id="closeTaskPopup">Close</button>
+</div>
+
+
+
+<div id="calendarPopup" style="display: none;">
+    <div id="calendarContainer">
+        <div id="calendarHeader">
+            <button id="prevMonth">Previous</button>
+            <span id="monthYear"></span>
+            <button id="nextMonth">Next</button>
+        </div>
+        <div id="calendarBody">
+            <div id="calendar">
+                <!-- Calendar structure -->
+                <div id="calendarHeader">
+                    <button id="prevMonth">Previous</button>
+                    <span id="monthYear"></span>
+                    <button id="nextMonth">Next</button>
+                </div>
+                <div id="calendarBody">
+                    <!-- Calendar days will be dynamically generated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="taskContainer">
+        <h3 id="taskDate"></h3>
+        <table id="taskTable">
+            <thead>
+                <tr>
+                    <th>Task</th>
+                    <th>Description</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+        <input type="text" id="newTaskTitle" placeholder="New Task Title">
+        <textarea id="newTaskDescription" placeholder="New Task Description"></textarea>
+        <button id="addTask">Add Task</button>
+    </div>
+    <div style="display: flex; justify-content: center; align-items: center; width: 100%;">
+        <button id="closeCalendarPopup" style="height: 40px; width: 120px; margin-right: 10px;">Close</button>
+    </div>
+</div>
+
+<div id="todayTasks" style="width: 80%; margin-left: 1%; margin-right: 1%;">
+    <h3 style="color: var(--secondary-color);">Today's Tasks</h3>
+    <div id="todayTaskList"></div>
+</div>
+
+<!-- Subject Management Section -->
+<div id="subjectManagement" class="popuparea" style="display: none;">
+    <div class="popup-content">
+        <h2>Manage Subjects</h2>
+        <input type="text" id="new-subject-name" placeholder="New Subject Name" />
+        <button onclick="addSubject()">Add Subject</button>
+        <ul id="subject-list"></ul>
+        <button onclick="toggleSubjectManagement()">Close</button>
+    </div>
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>

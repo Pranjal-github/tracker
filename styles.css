@@ -1,0 +1,917 @@
+/* Root Variables */
+:root {
+    --primary-color: #99B898;
+    --secondary-color: #FECEAB;
+    --accent-color: #FF847C;
+    --highlight-color: #E84A5F;
+    --background-color: #2A363B;
+}
+
+/* Global Styles */
+body {
+    background-color: var(--background-color);
+    color: var(--primary-color);
+    font-family: 'Roboto', sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 16px; /* Adjust base font size for better readability */
+}
+
+/* Header Styles */
+header {
+    background-color: var(--highlight-color);
+    padding: 10px;
+    margin-left: 0;
+    text-align: center;
+    color: white;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Button Styles */
+button {
+    padding: 8px 12px; /* Smaller padding for mobile */
+    border: none;
+    border-radius: 5px;
+    background: var(--background-color);
+    color: var(--accent-color);
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+    font-size: 0.9em; /* Smaller font size for buttons */
+}
+
+button:hover {
+    background-color: var(--secondary-color);
+    color: var(--background-color);
+    transform: translateY(-2px);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+/* Export-Import Buttons */
+.export-import-buttons {
+    display: flex;
+    gap: 10px;
+    margin-right: 50px;
+}
+
+.export-import-buttons button {
+    padding: 10px 15px;
+    border: none;
+    margin-right: 0;
+    border-radius: 5px;
+    background: var(--background-color);
+    color: var(--accent-color);
+    font-weight: bold;
+    transition: background 0.3s, transform 0.2s;
+}
+
+.export-import-buttons button:hover {
+    background-color: var(--secondary-color);
+    color: var(--background-color);
+    transform: translateY(-2px);
+}
+
+.exportcaltask:hover{
+    background-color: var(--secondary-color);
+    color: var(--background-color);
+    transform: translateY(-2px);
+}
+/* Typography */
+h1 {
+    margin: 0;
+    font-size: 1.8em; /* Smaller font size for mobile */
+    padding-left: 0;
+}
+
+h2 {
+    color: var(--background-color);
+    text-decoration: underline;
+    margin-bottom: 15px;
+    font-size: 1.5em;
+}
+
+.resourcesh2 , .pdfnotesh2 , .pomodoroh2 , .timetableh2 , .todoh2 , .chaptersh2 , .timetableh2 , .settingsh2 , .subjectsh2 {
+    color: var(--secondary-color);
+    margin-bottom: 15px;
+    text-decoration: none;
+    font-size: 1.5em;
+}
+
+/* Container Styles */
+.container, .resource-container, #todayTasks {
+    width: 80%; /* Use full width */
+    max-width: 100%; /* Allow full width usage */
+    margin: 20px 10px 10px 10px; /* Center the container */
+    padding: 0 10px; /* Equal padding on both sides */
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Responsive grid */
+    gap: 20px; /* Increase gap for better spacing */
+}
+
+/* Section Styles */
+.subject-section, .resource-box {
+    background: var(--primary-color);
+    color: var(--background-color);
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s;
+}
+
+.subject-section:hover, .resource-box:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Chapter Styles */
+.chapter {
+    margin: 10px 0;
+    border-bottom: 1px solid #ddd;
+    padding: 10px 0;
+}
+
+.chapter-name {
+    color: var(--background-color);
+    text-decoration: underline;
+    cursor: pointer;
+    margin-right: 10px;
+    font-weight: bold;
+}
+
+.lecture-status {
+    font-weight: bold;
+    color: var(--background-color);
+    margin-top: 5px;
+    display: block;
+}
+
+/* Progress Bar */
+.progress-bar-container {
+    width: 100%;
+    background: var(--background-color);
+    border-radius: 5px;
+    margin-top: 5px;
+    height: 10px;
+    margin-bottom: 10px;
+}
+
+.progress-bar {
+    height: 100%;
+    background-color: var(--highlight-color);
+    width: 0%;
+    border-radius: 5px;
+}
+
+/* Input Styles */
+.input-container {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    background: var(--background-color);
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+input[type="text"], input[type="number"], select {
+    padding: 10px;
+    background-color: var(--background-color);
+    color: var(--primary-color);
+    font-weight: bold;
+    margin: 5px 0;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    transition: border-color 0.2s;
+}
+
+input[type="text"]:focus, input[type="number"]:focus, select:focus {
+    border-color: #4A90E2;
+    outline: none;
+}
+
+/* Modal Styles */
+.modal, .popuparea {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(22, 22, 22, 0.89);
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    overflow-y: auto; /* Enable vertical scrolling */
+}
+
+.modal-content, .popup {
+    background-color: var(--background-color);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    width: 90%;
+    max-width: 800px;
+    text-align: center;
+    z-index: 10000;
+    max-height: 90vh; /* Limit height */
+    overflow-y: auto; /* Enable vertical scrolling */
+}
+
+/* Dark Theme */
+body.dark-mode {
+    background: #121212;
+    color: #e0e0e0;
+}
+
+header.dark-mode {
+    background: linear-gradient(90deg, #333, #444);
+    color: #e0e0e0;
+}
+
+.subject-section.dark-mode, .resource-box.dark-mode {
+    background: #1e1e1e;
+    color: #e0e0e0;
+}
+
+button.dark-mode {
+    background: #444;
+    color: #e0e0e0;
+}
+
+button.dark-mode:hover {
+    background: #555;
+}
+
+.modal-content.dark-mode, .popup.dark-mode {
+    background: #1e1e1e;
+    color: #e0e0e0;
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+    .modal-content, .popup, .popuptodo {
+        width: 90%;
+        padding: 15px;
+    }
+
+    header {
+        flex-direction: column;
+    }
+
+    .export-import-buttons {
+        display: none;
+    }
+
+    .subject-section, .resource-box {
+        width: 100%;
+    }
+
+    #todo-input, #todo-due-date, #todo-priority {
+        width: calc(100% - 20px);
+    }
+
+    .container, .resource-container, #todayTasks {
+        width: 80%;
+        grid-template-columns: 1fr; /* Single column layout for mobile */
+        padding: 0 5px; /* Reduce padding for smaller screens */
+    }
+}
+
+@media (max-width: 400px) {
+    body {
+        font-size: 14px;
+    }
+
+    h1 {
+        font-size: 1.5em;
+    }
+
+    h2 {
+        font-size: 1.2em;
+    }
+
+    button {
+        padding: 8px 12px;
+    }
+}
+
+/* ToDo Styles */
+.popuptodo {
+    background-color: var(--background-color);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    width: 500px;
+    text-align: center;
+    max-height: 80vh;
+    overflow-y: auto;
+    color: var(--primary-color);
+}
+
+.todo-container {
+    margin: 20px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+}
+
+.todo-container h3 {
+    color: var(--primary-color);
+    margin: 0;
+    font-size: 1.5em;
+}
+
+#todo-input, #todo-due-date, #todo-priority {
+    padding: 10px;
+    width: calc(100% - 22px);
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    color: var(--primary-color);
+    background-color: var(--background-color);
+}
+
+ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+li {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    background-color: var(--background-color);
+    color: var(--primary-color);
+}
+
+li .task-details {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
+li .task-details span {
+    margin-right: 10px;
+}
+
+li.completed .task-text {
+    text-decoration: line-through;
+    color: var(--primary-color);
+}
+
+li button {
+    background-color: transparent;
+    margin-top: 10px;
+    color: var(--primary-color);
+    border: 1px solid var(--primary-color);
+    transition: background-color 0.3s, color 0.3s;
+}
+
+li button:hover {
+    background-color: var(--primary-color);
+    color: var(--background-color);
+}
+
+/* Dark Mode for ToDo */
+li.dark-mode {
+    background-color: #2e2e2e;
+    color: #e0e0e0;
+}
+
+li.completed.dark-mode .task-text {
+    color: #888;
+}
+
+.popuptodo.maximized {
+    width: 90%;
+    height: 90%;
+    position: fixed;
+    top: 5%;
+    left: 5%;
+    z-index: 10000;
+    overflow: auto;
+}
+
+/* Table Styles */
+.todo-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
+.todo-table th, .todo-table td {
+    border: 1px solid var(--primary-color);
+    padding: 8px;
+    text-align: left;
+}
+
+.todo-table th {
+    background-color: var(--primary-color);
+    color: var(--background-color);
+}
+
+.todo-table tr:nth-child(even) {
+    background-color: var(--secondary-color);
+}
+
+.todo-table tr:hover {
+    background-color: var(--accent-color);
+    color: var(--background-color);
+}
+
+.todo-table .task-actions {
+    display: flex;
+    justify-content: space-around;
+}
+
+/* Resource Styles */
+.resource {
+    margin: 10px 0;
+    text-decoration: underline;
+    border-bottom: 1px solid #ddd;
+    padding: 10px 0;
+    z-index: 10000;
+}
+
+.resource-name {
+    color: var(--background-color);
+    text-decoration: underline;
+    cursor: pointer;
+    margin-right: 10px;
+    font-weight: bold;
+}
+
+/* PDF Notes Popup */
+.popuparea {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(22, 22, 22, 0.89);
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    overflow-y: auto; /* Enable vertical scrolling */
+}
+
+.popup-content {
+    background-color: var(--background-color);
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 10000;
+    max-height: 90vh; /* Limit height */
+    overflow-y: auto; /* Enable vertical scrolling */
+}
+
+.popup {
+    background-color: var(--background-color);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    width: 80%;
+    max-width: 800px;
+    text-align: center;
+    overflow-y: auto;
+    max-height: 80vh;
+}
+
+/* Dark Mode for PDF Notes */
+.popup.dark-mode {
+    background: #1e1e1e;
+    color: #e0e0e0;
+}
+
+/* Timetable Popup Styles */
+.popup-content {
+    max-width: 800px;
+    width: 95%;
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+    background-color: var(--background-color);
+    text-align: center;
+}
+
+.timetable {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-top: 25px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.timetable th, .timetable td {
+    border: none;
+    padding: 12px 15px;
+    text-align: left;
+}
+
+.timetable th {
+    background-color: var(--primary-color);
+    color: var(--background-color);
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.timetable tr:nth-child(even) {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.timetable tr:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease;
+}
+
+/* Pomodoro Timer */
+.pomodoro-timer {
+    margin-bottom: 30px;
+    padding: 20px;
+    background-color: var(--background-color);
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+#timer-display {
+    font-size: 3em;
+    margin: 25px 0;
+    color: var(--accent-color);
+    font-weight: bold;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.timer-settings {
+    margin-bottom: 25px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    align-items: center;
+}
+
+.timer-settings label {
+    margin-top: 0;
+    font-weight: bold;
+    color: var(--secondary-color);
+}
+
+.timer-settings input {
+    width: 70px;
+    padding: 8px;
+    margin-top: 5px;
+    text-align: center;
+    border: 2px solid var(--primary-color);
+    border-radius: 5px;
+    font-size: 1em;
+    transition: border-color 0.3s ease;
+}
+
+.timer-settings input:focus {
+    outline: none;
+    border-color: var(--accent-color);
+}
+
+/* Fullsize and Scrollable Popup */
+.fullsize-scrollable {
+    width: 100%;
+    height: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    background-color: var(--background-color);
+    text-align: center;
+}
+
+/* Dark Mode for Specific Popups */
+body.dark-mode #pomodoro-popup .popup-content,
+body.dark-mode #timetable-popup .popup-content {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+}
+
+body.dark-mode #pomodoro-popup .popup-content button,
+body.dark-mode #timetable-popup .popup-content button {
+    background: #444;
+    color: #e0e0e0;
+}
+
+body.dark-mode #pomodoro-popup .popup-content button:hover,
+body.dark-mode #timetable-popup .popup-content button:hover {
+    background: #555;
+}
+
+body.dark-mode #pomodoro-popup #timer-display {
+    color: #e0e0e0;
+}
+
+body.dark-mode #timetable-popup .timetable th {
+    background-color: #333;
+    color: #e0e0e0;
+}
+
+body.dark-mode #timetable-popup .timetable tr:nth-child(even) {
+    background-color: #2a2a2a;
+}
+
+body.dark-mode #timetable-popup .timetable tr:hover {
+    background-color: #444;
+}
+
+/* Timer Options */
+.timer-options {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.timer-options button {
+    margin: 0 10px;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    background: var(--accent-color);
+    color: var(--background-color);
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s, box-shadow 0.3s;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.timer-options button:hover {
+    background: var(--secondary-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.timer-options button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Calendar Styles */
+#calendar {
+    width: 100%;
+    max-width: 800px;
+    margin: auto;
+    font-family: Arial, sans-serif;
+}
+
+#calendarHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    font-size: 1.2em;
+}
+
+#calendarBody {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 10px;
+}
+
+#taskPopup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: var(--background-color);
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 10000;
+}
+
+#exportButton {
+    margin-top: 20px;
+    padding: 10px 15px;
+    background-color: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+#exportButton:hover {
+    background-color: var(--secondary-color);
+}
+
+#calendarPopup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    color: white;
+    overflow-y: auto; /* Enable vertical scrolling */
+}
+
+#calendarContainer, #taskContainer, #todayTasks {
+    background-color: var(--background-color);
+    color: #99b5bb;
+    padding: 30px;
+    margin: 15px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 900px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+    max-height: 80vh; /* Limit height */
+    overflow-y: auto; /* Enable vertical scrolling */
+}
+
+#taskContainer {
+    background-color: var(--background-color);
+    color: var(--primary-color);
+}
+
+#calendarBody div {
+    padding: 15px;
+    background-color: #344247dc;
+    text-align: center;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+#calendarBody div:hover {
+    background-color: #e0e0e071;
+    transform: scale(1.05);
+}
+
+#taskTable {
+    width: 100%;
+    margin-top: 20px;
+    border-collapse: separate;
+    border-spacing: 0 10px;
+}
+
+#taskTable th, #taskTable td {
+    border: none;
+    padding: 12px;
+    text-align: left;
+    background-color: #f5f5f5;
+}
+
+#taskTable td {
+    background-color: var(--background-color);
+}
+
+#taskTable th {
+    background-color: var(--primary-color);
+    color: var(--background-color);
+    font-weight: bold;
+}
+
+#taskTable tr {
+    transition: background-color 0.3s ease;
+}
+
+#taskTable tr:hover {
+    background-color: #e0e0e0;
+}
+
+/* Dark Mode for Calendar */
+body.dark-mode #calendarPopup {
+    background-color: rgba(18, 18, 18, 0.9);
+}
+
+body.dark-mode #calendarContainer, 
+body.dark-mode #taskContainer, 
+body.dark-mode #todayTasks {
+    background-color: #333;
+    color: #e0e0e0;
+}
+
+body.dark-mode #calendarBody div {
+    background-color: #444;
+}
+
+body.dark-mode #taskTable th, 
+body.dark-mode #taskTable td {
+    border-color: #555;
+}
+
+body.dark-mode #taskTable tr:nth-child(even) {
+    background-color: #2a2a2a;
+}
+
+/* Menu Button Styles */
+.menu-button {
+    padding-right: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    margin: 10px;
+}
+
+.menu-button .bar {
+    background-color: white;
+    width: 100%;
+    height: 4px;
+    transition: all 0.3s ease;
+}
+
+/* Menu Styles */
+.menu {
+    z-index: 2000;
+    display: none;
+    flex-direction: column;
+    position: absolute;
+    top: 100px;
+    right: 10px;
+    background-color: var(--background-color);
+    border-radius: 5px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 10px;
+    border: 1px solid var(--primary-color);
+    width: 100%;
+    max-width: 300px; /* Limit menu width on mobile */
+}
+
+.menu button {
+    background: none;
+    border: none;
+    color: var(--primary-color);
+    padding: 8px;
+    text-align: left;
+    width: 100%;
+    cursor: pointer;
+    transition: background 0.3s;
+    font-size: 0.9em;
+}
+
+.menu button:hover {
+    background-color: var(--primary-color);
+    color: var(--background-color);
+}
+
+/* Media query for larger screens */
+@media (min-width: 768px) {
+    header {
+        flex-direction: row;
+        justify-content: space-between;
+    }
+
+    h1 {
+        font-size: 2.5em; /* Larger font size for desktop */
+    }
+
+    .container, .resource-container {
+        grid-template-columns: repeat(2, 1fr); /* Two columns for tablets and up */
+    }
+}
+
+@media (min-width: 1024px) {
+    .container, .resource-container {
+        grid-template-columns: repeat(3, 1fr); /* Three columns for larger screens */
+    }
+}
+
+.popup-content, .modal-content {
+    width: 95%;
+    max-width: 500px; /* Limit width for mobile */
+    padding: 15px;
+}
+
+#calendarPopup, #taskPopup, .popuparea {
+    padding: 10px;
+}
+
+.completed-task {
+    text-decoration: line-through;
+    color: gray;
+}

@@ -352,7 +352,6 @@
     <div class="tool-card">
         💾 Data:
         <button class="btn-small" onclick="exportData()" style="background:#27ae60">Export</button>
-        <button class="btn-small" onclick="saveToFile()" style="background:#4361ee">Save to File</button>
         <button class="btn-small" onclick="document.getElementById('file-input').click()" style="background:#f39c12">Import</button>
         <input type="file" id="file-input" accept=".json" onchange="importData(event)">
     </div>
@@ -439,55 +438,27 @@
     let tests = [];
 
     // --- Core Logic ---
-//change1start
-async function init() {
-    setTheme(localStorage.getItem('jee_theme') || 'light');
+    function init() {
+        // Theme Load
+        setTheme(localStorage.getItem('jee_theme') || 'light');
 
-    try {
-        // 1. Try to pull the latest syllabus.json from the folder
-        const response = await fetch('syllabus.json');
-        if (response.ok) {
-            syllabus = await response.json();
-            console.log("Loaded data from syllabus.json");
-        }
-    } catch (err) {
-        console.warn("Could not fetch syllabus.json, falling back to local storage.", err);
+        // Data Load
         const savedSyllabus = localStorage.getItem('jee_syllabus_struct');
         syllabus = savedSyllabus ? JSON.parse(savedSyllabus) : JSON.parse(JSON.stringify(defaultData));
+
+        const savedProgress = localStorage.getItem('jee_progress_state');
+        progressState = savedProgress ? JSON.parse(savedProgress) : {};
+
+        const savedTasks = localStorage.getItem('jee_tasks');
+        tasks = savedTasks ? JSON.parse(savedTasks) : [];
+
+        const savedTests = localStorage.getItem('jee_tests');
+        tests = savedTests ? JSON.parse(savedTests) : [];
+
+        renderAll();
+        updateGlobalStats();
+        randomQuote();
     }
-
-    // Load progress, tasks, and tests from localStorage as usual
-    progressState = JSON.parse(localStorage.getItem('jee_progress_state') || '{}');
-    tasks = JSON.parse(localStorage.getItem('jee_tasks') || '[]');
-    tests = JSON.parse(localStorage.getItem('jee_tests') || '[]');
-
-    renderAll();
-    updateGlobalStats();
-    randomQuote();
-}
-
-async function saveToFile() {
-    const dataToSave = JSON.stringify({ syllabus, progress: progressState, tasks, tests }, null, 2);
-
-    try {
-        // This opens a dialog. If you select 'syllabus.json', it will overwrite it.
-        const handle = await window.showSaveFilePicker({
-            suggestedName: 'syllabus.json',
-            types: [{
-                description: 'JSON File',
-                accept: {'application/json': ['.json']},
-            }],
-        });
-
-        const writable = await handle.createWritable();
-        await writable.write(dataToSave);
-        await writable.close();
-        alert("File saved successfully!");
-    } catch (err) {
-        console.error("Save cancelled or failed", err);
-    }
-}
-//change1end
 
     function saveToLocal() {
         localStorage.setItem('jee_syllabus_struct', JSON.stringify(syllabus));

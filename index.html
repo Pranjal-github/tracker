@@ -4,7 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="manifest" href="./manifest.json">
-    <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(()=>{})}</script>
+    <script>
+  if('serviceWorker' in navigator){
+    // Point to the relative path
+    navigator.serviceWorker.register('./sw.js').catch(()=>{})
+  }
+</script>
 
     <title>JEE Ultimate Tracker Pro</title>
     <style>

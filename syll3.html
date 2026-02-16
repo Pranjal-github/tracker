@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JEE Ultimate Tracker Pro</title>
+    <style>
+        :root {
+            /* Light Theme Variables */
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --success: #4cc9f0;
+            --bg: #f8f9fa;
+            --card-bg: #ffffff;
+            --header-text: #ffffff;
+            --text: #2b2d42;
+            --text-light: #8d99ae;
+            --border: #f0f0f0;
+            --phy: #480ca8;
+            --math: #b5179e;
+            --chem: #007200;
+            --topic-bg: #fdfdfd;
+        }
+
+        [data-theme="dark"] {
+            /* Dark Theme Variables */
+            --bg: #0b0e14;
+            --card-bg: #1a1f29;
+            --text: #e0e0e0;
+            --text-light: #a0a0a0;
+            --border: #2d343f;
+            --topic-bg: #12161d;
+            --header-text: #ffffff;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; transition: background-color 0.3s, color 0.3s; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            padding-bottom: 50px;
+        }
+
+        /* --- Header --- */
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--header-text);
+            padding: 2rem 1rem;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            position: relative;
+        }
+
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        h1 { font-size: 2.2rem; margin-bottom: 0.5rem; letter-spacing: 1px; }
+        .quote { font-style: italic; opacity: 0.9; font-size: 0.9rem; margin-bottom: 20px; }
+
+        .progress-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.2);
+            border-radius: 20px;
+            padding: 5px;
+        }
+        .progress-bar {
+            height: 10px;
+            background-color: var(--success);
+            border-radius: 20px;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        /* --- Tools Bar --- */
+        .controls-bar {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            padding: 20px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .tool-card {
+            background: var(--card-bg);
+            padding: 10px 20px;
+            border-radius: 50px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid var(--border);
+        }
+
+        .dot { width: 12px; height: 12px; display: inline-block; border-radius: 2px; }
+        .dot.green { background: #2ecc71; }
+        .dot.blue { background: #3498db; }
+        .dot.orange { background: #e67e22; }
+
+        .btn-small {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+
+        /* --- Tabs --- */
+        .tabs { display: flex; justify-content: center; margin-top: 10px; gap: 10px; }
+        .tab-btn {
+            padding: 10px 25px;
+            border: none;
+            background: var(--card-bg);
+            color: var(--text);
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            opacity: 0.6;
+        }
+        .tab-btn.active { opacity: 1; color: white; transform: translateY(-2px); }
+        .tab-btn[data-subject="physics"].active { background: var(--phy); }
+        .tab-btn[data-subject="chemistry"].active { background: var(--chem); }
+        .tab-btn[data-subject="maths"].active { background: var(--math); }
+
+        /* --- Content Layout --- */
+        .container { max-width: 900px; margin: 20px auto; padding: 0 15px; }
+        .subject-section { display: none; }
+        .subject-section.active { display: block; animation: fadeIn 0.3s; }
+
+        .chem-category-title {
+            color: var(--chem);
+            margin: 25px 0 10px;
+            padding-left: 10px;
+            border-left: 4px solid var(--chem);
+        }
+
+        /* --- Chapter Cards --- */
+        .chapter-card {
+            background: var(--card-bg);
+            margin-bottom: 12px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .chapter-header {
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+        .chapter-header:hover { background: rgba(0,0,0,0.02); }
+        .chapter-title { font-weight: 600; }
+
+        .check-group { display: flex; gap: 8px; }
+        .custom-check {
+            appearance: none;
+            width: 22px;
+            height: 22px;
+            border: 2px solid var(--border);
+            border-radius: 5px;
+            cursor: pointer;
+            position: relative;
+        }
+        .custom-check.c1:checked { background: #2ecc71; border-color: #2ecc71; }
+        .custom-check.c2:checked { background: #3498db; border-color: #3498db; }
+        .custom-check.c3:checked { background: #e67e22; border-color: #e67e22; }
+        .custom-check:checked::after { content: '✔'; position: absolute; color: white; font-size: 14px; left: 4px; top: -1px; }
+
+        .topics-list {
+            display: none;
+            background: var(--topic-bg);
+            padding: 15px 25px;
+            border-top: 1px solid var(--border);
+        }
+
+        .topic-item {
+            padding: 6px 0;
+            border-bottom: 1px dashed var(--border);
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+
+        .add-area { display: flex; gap: 8px; margin-top: 10px; }
+        .add-input {
+            flex: 1;
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: var(--text);
+        }
+        .add-btn {
+            background: var(--text);
+            color: var(--card-bg);
+            border: none;
+            padding: 5px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .backup-zone {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px dashed var(--border);
+            text-align: center;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        #file-input { display: none; }
+    </style>
+</head>
+<body data-theme="light">
+
+<header>
+    <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn">🌙 Dark Mode</button>
+    <h1>JEE PREP TRACKER</h1>
+    <div class="quote" id="quote-display">"Loading motivation..."</div>
+
+    <div class="progress-container">
+        <div class="progress-bar" id="global-progress"></div>
+    </div>
+    <div style="margin-top:8px; font-size: 0.8rem;" id="stats-text">0% Done</div>
+</header>
+
+<div class="controls-bar">
+    <div class="tool-card">
+        <span class="dot green"></span>Theory
+        <span class="dot blue"></span>Rev
+        <span class="dot orange"></span>80+ Qs
+    </div>
+
+    <div class="tool-card">
+        ⏱ <span id="timer-display">25:00</span>
+        <button class="btn-small" onclick="toggleTimer()">Start/Stop</button>
+    </div>
+
+    <div class="tool-card">
+        💾 Data:
+        <button class="btn-small" onclick="exportData()" style="background:#27ae60">Export</button>
+        <button class="btn-small" onclick="document.getElementById('file-input').click()" style="background:#f39c12">Import</button>
+        <input type="file" id="file-input" accept=".json" onchange="importData(event)">
+    </div>
+</div>
+
+<div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('physics')" data-subject="physics">Physics</button>
+    <button class="tab-btn" onclick="switchTab('chemistry')" data-subject="chemistry">Chemistry</button>
+    <button class="tab-btn" onclick="switchTab('maths')" data-subject="maths">Maths</button>
+</div>
+
+<div class="container">
+    <div id="physics-content" class="subject-section active"></div>
+    <div id="chemistry-content" class="subject-section"></div>
+    <div id="maths-content" class="subject-section"></div>
+
+    <div class="backup-zone">
+        <button class="btn-small" style="background:#e74c3c" onclick="resetAllData()">Delete All Progress</button>
+    </div>
+</div>
+
+<script>
+    // --- Initial Data ---
+    const defaultData = {
+        physics: { "General": [
+            { name: "Kinematics", topics: ["1D Motion", "Projectiles"] },
+            { name: "Laws of Motion", topics: ["Friction", "Pulley Systems"] }
+        ]},
+        maths: { "General": [
+            { name: "Quadratic Equations", topics: ["Roots", "Location of Roots"] },
+            { name: "Sequence & Series", topics: ["AP", "GP", "HP"] }
+        ]},
+        chemistry: {
+            "Physical": [{ name: "Mole Concept", topics: ["Stoichiometry"] }],
+            "Inorganic": [{ name: "Chemical Bonding", topics: ["Hybridization"] }],
+            "Organic": [{ name: "GOC", topics: ["Inductive Effect"] }]
+        }
+    };
+
+    let syllabus = {};
+    let progressState = {};
+
+    // --- Core Logic ---
+    function init() {
+        // Theme Load
+        const savedTheme = localStorage.getItem('jee_theme') || 'light';
+        setTheme(savedTheme);
+
+        // Data Load
+        const savedSyllabus = localStorage.getItem('jee_syllabus_struct');
+        syllabus = savedSyllabus ? JSON.parse(savedSyllabus) : JSON.parse(JSON.stringify(defaultData));
+
+        const savedProgress = localStorage.getItem('jee_progress_state');
+        progressState = savedProgress ? JSON.parse(savedProgress) : {};
+
+        renderAll();
+        updateGlobalStats();
+        randomQuote();
+    }
+
+    function saveToLocal() {
+        localStorage.setItem('jee_syllabus_struct', JSON.stringify(syllabus));
+        localStorage.setItem('jee_progress_state', JSON.stringify(progressState));
+        updateGlobalStats();
+    }
+
+    // --- Rendering ---
+    function renderAll() {
+        renderSubject('physics', 'physics-content');
+        renderSubject('maths', 'maths-content');
+        renderChemistry();
+    }
+
+    function renderSubject(subjKey, containerId) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = "";
+        for (const [category, chapters] of Object.entries(syllabus[subjKey])) {
+            chapters.forEach((chapter, index) => {
+                container.appendChild(createChapterCard(chapter, `${subjKey}-${category}-${index}`, subjKey, category, index));
+            });
+            container.appendChild(createAddChapterUI(subjKey, category));
+        }
+    }
+
+    function renderChemistry() {
+        const container = document.getElementById('chemistry-content');
+        container.innerHTML = "";
+        ["Physical", "Inorganic", "Organic"].forEach(cat => {
+            const header = document.createElement('h3');
+            header.className = "chem-category-title";
+            header.innerText = cat;
+            container.appendChild(header);
+            syllabus.chemistry[cat].forEach((chapter, index) => {
+                container.appendChild(createChapterCard(chapter, `chemistry-${cat}-${index}`, 'chemistry', cat, index));
+            });
+            container.appendChild(createAddChapterUI('chemistry', cat));
+        });
+    }
+
+    function createChapterCard(chapter, id, subject, category, index) {
+        const card = document.createElement('div');
+        card.className = "chapter-card";
+        const c1 = `${id}-c1`, c2 = `${id}-c2`, c3 = `${id}-c3`;
+
+        card.innerHTML = `
+            <div class="chapter-header" onclick="toggleTopics('${id}')">
+                <span class="chapter-title">${chapter.name}</span>
+                <div class="check-group" onclick="event.stopPropagation()">
+                    <input type="checkbox" class="custom-check c1" ${progressState[c1]?'checked':''} onchange="updateCheck('${c1}', this)">
+                    <input type="checkbox" class="custom-check c2" ${progressState[c2]?'checked':''} onchange="updateCheck('${c2}', this)">
+                    <input type="checkbox" class="custom-check c3" ${progressState[c3]?'checked':''} onchange="updateCheck('${c3}', this)">
+                </div>
+            </div>
+            <div class="topics-list" id="topics-${id}">
+                ${chapter.topics.map(t => `<div class="topic-item">• ${t}</div>`).join('')}
+                <div class="add-area">
+                    <input type="text" class="add-input" placeholder="New topic..." id="in-${id}">
+                    <button class="add-btn" onclick="addTopic('${subject}','${category}',${index},'${id}')">+</button>
+                </div>
+            </div>`;
+        return card;
+    }
+
+    function createAddChapterUI(sub, cat) {
+        const div = document.createElement('div');
+        div.className = "add-area";
+        div.style.padding = "0 10px 20px 10px";
+        div.innerHTML = `
+            <input type="text" class="add-input" placeholder="Add Chapter..." id="new-${sub}-${cat}">
+            <button class="add-btn" onclick="addNewChapter('${sub}','${cat}')">Add</button>`;
+        return div;
+    }
+
+    // --- Actions ---
+    function toggleTopics(id) {
+        const el = document.getElementById(`topics-${id}`);
+        el.style.display = el.style.display === 'block' ? 'none' : 'block';
+    }
+
+    function updateCheck(id, el) {
+        progressState[id] = el.checked;
+        saveToLocal();
+    }
+
+    function addNewChapter(sub, cat) {
+        const val = document.getElementById(`new-${sub}-${cat}`).value;
+        if(!val) return;
+        syllabus[sub][cat].push({ name: val, topics: [] });
+        saveToLocal(); renderAll();
+    }
+
+    function addTopic(sub, cat, idx, uiId) {
+        const val = document.getElementById(`in-${uiId}`).value;
+        if(!val) return;
+        syllabus[sub][cat][idx].topics.push(val);
+        saveToLocal(); renderAll();
+        document.getElementById(`topics-${uiId}`).style.display = 'block';
+    }
+
+    function switchTab(sub) {
+        document.querySelectorAll('.tab-btn, .subject-section').forEach(el => el.classList.remove('active'));
+        document.querySelector(`.tab-btn[data-subject="${sub}"]`).classList.add('active');
+        document.getElementById(`${sub}-content`).classList.add('active');
+    }
+
+    // --- Dark Mode ---
+    function toggleTheme() {
+        const current = document.body.getAttribute('data-theme');
+        const next = current === 'light' ? 'dark' : 'light';
+        setTheme(next);
+    }
+
+    function setTheme(theme) {
+        document.body.setAttribute('data-theme', theme);
+        localStorage.setItem('jee_theme', theme);
+        document.getElementById('theme-btn').innerText = theme === 'light' ? '🌙 Dark Mode' : '☀️ Light Mode';
+    }
+
+    // --- Data Export/Import ---
+    function exportData() {
+        const data = { syllabus, progress: progressState };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `jee_backup_${new Date().toISOString().slice(0,10)}.json`;
+        a.click();
+    }
+
+    function importData(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const imported = JSON.parse(e.target.result);
+                if(imported.syllabus && imported.progress) {
+                    syllabus = imported.syllabus;
+                    progressState = imported.progress;
+                    saveToLocal();
+                    location.reload();
+                } else {
+                    alert("Invalid JSON format!");
+                }
+            } catch (err) { alert("Error reading file!"); }
+        };
+        reader.readAsText(file);
+    }
+
+    // --- Timer & Stats ---
+    let timerInt;
+    let seconds = 1500;
+    function toggleTimer() {
+        if(timerInt) { clearInterval(timerInt); timerInt = null; return; }
+        timerInt = setInterval(() => {
+            seconds--;
+            const m = Math.floor(seconds/60), s = seconds%60;
+            document.getElementById('timer-display').innerText = `${m}:${s<10?'0':''}${s}`;
+            if(seconds <= 0) { clearInterval(timerInt); alert("Time's up!"); }
+        }, 1000);
+    }
+
+    function updateGlobalStats() {
+        let total = 0, done = 0;
+        const count = (obj) => {
+            for(let k in obj) Array.isArray(obj[k]) ? total += obj[k].length : count(obj[k]);
+        };
+        count(syllabus);
+        Object.values(progressState).forEach(v => v && done++);
+        const p = total ? Math.round((done/(total*3))*100) : 0;
+        document.getElementById('global-progress').style.width = p+'%';
+        document.getElementById('stats-text').innerText = p + '% Completion';
+    }
+
+    function randomQuote() {
+        const q = ["Success is not final, failure is not fatal.", "Don't watch the clock; do what it does. Keep going.", "Focus on the goal, not the obstacle."];
+        document.getElementById('quote-display').innerText = q[Math.floor(Math.random()*q.length)];
+    }
+
+    function resetAllData() {
+        if(confirm("Delete everything?")) { localStorage.clear(); location.reload(); }
+    }
+
+    window.onload = init;
+</script>
+
+</body>
+</html>

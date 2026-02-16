@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="./manifest.json">
+    <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(()=>{})}</script>
+
     <title>JEE Ultimate Tracker Pro</title>
     <style>
         :root {
@@ -15,11 +18,13 @@
             --header-text: #ffffff;
             --text: #2b2d42;
             --text-light: #8d99ae;
-            --border: #f0f0f0;
+            --border: #e0e0e0;
             --phy: #480ca8;
             --math: #b5179e;
             --chem: #007200;
-            --topic-bg: #fdfdfd;
+            --topic-bg: #f8f9fa;
+            --star: #f1c40f;
+            --danger: #e74c3c;
         }
 
         [data-theme="dark"] {
@@ -39,7 +44,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--bg);
             color: var(--text);
-            padding-bottom: 50px;
+            padding-bottom: 80px;
         }
 
         /* --- Header --- */
@@ -122,9 +127,15 @@
         }
 
         /* --- Tabs --- */
-        .tabs { display: flex; justify-content: center; margin-top: 10px; gap: 10px; }
+        .tabs-wrapper {
+            overflow-x: auto;
+            white-space: nowrap;
+            padding: 0 10px;
+            scrollbar-width: none;
+        }
+        .tabs { display: flex; justify-content: center; margin-top: 10px; gap: 10px; min-width: max-content; }
         .tab-btn {
-            padding: 10px 25px;
+            padding: 10px 20px;
             border: none;
             background: var(--card-bg);
             color: var(--text);
@@ -133,11 +144,15 @@
             cursor: pointer;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
             opacity: 0.6;
+            transition: all 0.2s;
         }
         .tab-btn.active { opacity: 1; color: white; transform: translateY(-2px); }
         .tab-btn[data-subject="physics"].active { background: var(--phy); }
         .tab-btn[data-subject="chemistry"].active { background: var(--chem); }
         .tab-btn[data-subject="maths"].active { background: var(--math); }
+        .tab-btn[data-subject="notebook"].active { background: #f39c12; }
+        .tab-btn[data-subject="tasks"].active { background: #e74c3c; }
+        .tab-btn[data-subject="tests"].active { background: #2c3e50; }
 
         /* --- Content Layout --- */
         .container { max-width: 900px; margin: 20px auto; padding: 0 15px; }
@@ -154,10 +169,11 @@
         /* --- Chapter Cards --- */
         .chapter-card {
             background: var(--card-bg);
-            margin-bottom: 12px;
-            border-radius: 10px;
+            margin-bottom: 15px;
+            border-radius: 12px;
             border: 1px solid var(--border);
             overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
         }
 
         .chapter-header {
@@ -166,44 +182,87 @@
             justify-content: space-between;
             align-items: center;
             cursor: pointer;
+            position: relative;
         }
         .chapter-header:hover { background: rgba(0,0,0,0.02); }
-        .chapter-title { font-weight: 600; }
 
-        .check-group { display: flex; gap: 8px; }
+        .header-left { display: flex; align-items: center; gap: 10px; }
+        .star-btn {
+            background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-light); transition: 0.2s;
+        }
+        .star-btn.active { color: var(--star); transform: scale(1.2); }
+
+        .chapter-title { font-weight: 600; font-size: 1.05rem; }
+
+        .chapter-tools { display: flex; align-items: center; gap: 10px; }
+        .todo-add-btn {
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            cursor: pointer;
+            color: var(--text);
+        }
+        .todo-add-btn:hover { background: var(--primary); color: white; border-color: var(--primary); }
+
+        .check-group { display: flex; gap: 5px; }
+        /* Keeping generic chapter tracking as "Overall Status" */
         .custom-check {
             appearance: none;
-            width: 22px;
-            height: 22px;
+            width: 18px;
+            height: 18px;
             border: 2px solid var(--border);
-            border-radius: 5px;
+            border-radius: 4px;
             cursor: pointer;
             position: relative;
         }
         .custom-check.c1:checked { background: #2ecc71; border-color: #2ecc71; }
         .custom-check.c2:checked { background: #3498db; border-color: #3498db; }
         .custom-check.c3:checked { background: #e67e22; border-color: #e67e22; }
-        .custom-check:checked::after { content: '✔'; position: absolute; color: white; font-size: 14px; left: 4px; top: -1px; }
 
+        /* --- New Topic Row Styles --- */
         .topics-list {
             display: none;
             background: var(--topic-bg);
-            padding: 15px 25px;
+            padding: 10px 20px;
             border-top: 1px solid var(--border);
         }
 
-        .topic-item {
-            padding: 6px 0;
+        .topic-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
             border-bottom: 1px dashed var(--border);
             font-size: 0.9rem;
-            color: var(--text-light);
+        }
+        .topic-name { flex: 1; padding-right: 10px; color: var(--text); }
+
+        .topic-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
-        .add-area { display: flex; gap: 8px; margin-top: 10px; }
+        .t-check-label { font-size: 0.7rem; color: var(--text-light); display: flex; flex-direction: column; align-items: center; }
+        .rev-counter-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            min-width: 60px;
+            text-align: center;
+        }
+        .rev-counter-btn:active { transform: scale(0.95); }
+
+        .add-area { display: flex; gap: 8px; margin-top: 15px; }
         .add-input {
             flex: 1;
             padding: 8px;
-            border-radius: 5px;
+            border-radius: 8px;
             border: 1px solid var(--border);
             background: var(--bg);
             color: var(--text);
@@ -213,9 +272,46 @@
             color: var(--card-bg);
             border: none;
             padding: 5px 15px;
-            border-radius: 5px;
+            border-radius: 8px;
             cursor: pointer;
         }
+
+        /* --- Test Tracker Styles --- */
+        .test-input-card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            margin-bottom: 20px;
+        }
+        .input-group { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+        .input-group input { padding: 8px; border-radius: 6px; border: 1px solid var(--border); flex: 1; background: var(--bg); color: var(--text); }
+
+        .test-history-item {
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border-left: 5px solid var(--primary);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .score-pill {
+            display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 0.8rem; margin-right: 5px; color: white;
+        }
+        .score-p { background: var(--phy); }
+        .score-c { background: var(--chem); }
+        .score-m { background: var(--math); }
+
+        /* --- Task List Styles --- */
+        .task-item {
+            background: var(--card-bg);
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .task-meta { font-size: 0.75rem; color: var(--primary); background: rgba(67, 97, 238, 0.1); padding: 2px 6px; border-radius: 4px; margin-right: 8px;}
 
         .backup-zone {
             margin-top: 40px;
@@ -232,8 +328,8 @@
 <body data-theme="light">
 
 <header>
-    <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn">🌙 Dark Mode</button>
-    <h1>JEE PREP TRACKER</h1>
+    <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn">🌙</button>
+    <h1>JEE TRACKER PRO</h1>
     <div class="quote" id="quote-display">"Loading motivation..."</div>
 
     <div class="progress-container">
@@ -243,12 +339,6 @@
 </header>
 
 <div class="controls-bar">
-    <div class="tool-card">
-        <span class="dot green"></span>Theory
-        <span class="dot blue"></span>Rev
-        <span class="dot orange"></span>80+ Qs
-    </div>
-
     <div class="tool-card">
         ⏱ <span id="timer-display">25:00</span>
         <button class="btn-small" onclick="toggleTimer()">Start/Stop</button>
@@ -260,18 +350,64 @@
         <button class="btn-small" onclick="document.getElementById('file-input').click()" style="background:#f39c12">Import</button>
         <input type="file" id="file-input" accept=".json" onchange="importData(event)">
     </div>
+    <div class="tool-card">
+    💾 Data:
+        <button class="btn-small" onclick="saveToFile()" style="background:#4361ee">Save to File</button>
+        <button class="btn-small" onclick="exportData()" style="background:#27ae60">Export</button>
+    </div>
 </div>
 
-<div class="tabs">
-    <button class="tab-btn active" onclick="switchTab('physics')" data-subject="physics">Physics</button>
-    <button class="tab-btn" onclick="switchTab('chemistry')" data-subject="chemistry">Chemistry</button>
-    <button class="tab-btn" onclick="switchTab('maths')" data-subject="maths">Maths</button>
+<div class="tabs-wrapper">
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('physics')" data-subject="physics">Physics</button>
+        <button class="tab-btn" onclick="switchTab('chemistry')" data-subject="chemistry">Chemistry</button>
+        <button class="tab-btn" onclick="switchTab('maths')" data-subject="maths">Maths</button>
+        <button class="tab-btn" onclick="switchTab('notebook')" data-subject="notebook">★ Notebook</button>
+        <button class="tab-btn" onclick="switchTab('tasks')" data-subject="tasks">✓ Tasks</button>
+        <button class="tab-btn" onclick="switchTab('tests')" data-subject="tests">📊 Tests</button>
+    </div>
 </div>
 
 <div class="container">
     <div id="physics-content" class="subject-section active"></div>
     <div id="chemistry-content" class="subject-section"></div>
     <div id="maths-content" class="subject-section"></div>
+
+    <div id="notebook-content" class="subject-section">
+        <div style="text-align:center; padding: 20px; color: var(--text-light);">
+            <h3>Starred Chapters & Topics</h3>
+            <p>Click the Star icon on chapters to add them here.</p>
+        </div>
+        <div id="starred-list"></div>
+    </div>
+
+    <div id="tasks-content" class="subject-section">
+        <div class="test-input-card">
+            <div class="input-group">
+                <input type="text" id="new-task-input" placeholder="Add a general task...">
+                <button class="btn-small" onclick="addTaskManual()">Add</button>
+            </div>
+        </div>
+        <div id="todo-list-container"></div>
+    </div>
+
+    <div id="tests-content" class="subject-section">
+        <div class="test-input-card">
+            <h3>Add Test Score</h3>
+            <div class="input-group">
+                <input type="text" id="test-name" placeholder="Test Name (e.g. Mock 1)">
+                <input type="date" id="test-date">
+            </div>
+            <div class="input-group">
+                <input type="number" id="score-p" placeholder="Physics Score">
+                <input type="number" id="score-c" placeholder="Chem Score">
+                <input type="number" id="score-m" placeholder="Math Score">
+                <input type="number" id="score-total-max" placeholder="Max Marks (e.g. 300)" value="300">
+            </div>
+            <button class="btn-small" style="width:100%" onclick="addTestScore()">Save Score</button>
+        </div>
+        <div id="test-history"></div>
+    </div>
 
     <div class="backup-zone">
         <button class="btn-small" style="background:#e74c3c" onclick="resetAllData()">Delete All Progress</button>
@@ -282,44 +418,81 @@
     // --- Initial Data ---
     const defaultData = {
         physics: { "General": [
-            { name: "Kinematics", topics: ["1D Motion", "Projectiles"] },
-            { name: "Laws of Motion", topics: ["Friction", "Pulley Systems"] }
+            { name: "Kinematics", topics: ["1D Motion", "Projectiles", "Relative Motion"] },
+            { name: "Laws of Motion", topics: ["Friction", "Pulley Systems", "Circular Dynamics"] }
         ]},
-        maths: { "General": [
-            { name: "Quadratic Equations", topics: ["Roots", "Location of Roots"] },
-            { name: "Sequence & Series", topics: ["AP", "GP", "HP"] }
+        maths: { "Algebra": [
+            { name: "Quadratic Equations", topics: ["Roots", "Location of Roots", "Common Roots"] },
+            { name: "Sequence & Series", topics: ["AP", "GP", "HP", "AGP"] }
         ]},
         chemistry: {
-            "Physical": [{ name: "Mole Concept", topics: ["Stoichiometry"] }],
-            "Inorganic": [{ name: "Chemical Bonding", topics: ["Hybridization"] }],
-            "Organic": [{ name: "GOC", topics: ["Inductive Effect"] }]
+            "Physical": [{ name: "Mole Concept", topics: ["Stoichiometry", "Concentration Terms"] }],
+            "Inorganic": [{ name: "Chemical Bonding", topics: ["VSEPR", "Hybridization", "MOT"] }],
+            "Organic": [{ name: "GOC", topics: ["Inductive Effect", "Resonance", "Hyperconjugation"] }]
         }
     };
 
     let syllabus = {};
-    let progressState = {};
+    let progressState = {}; // Stores checkboxes, revision counts, stars
+    let tasks = [];
+    let tests = [];
 
     // --- Core Logic ---
-    function init() {
-        // Theme Load
-        const savedTheme = localStorage.getItem('jee_theme') || 'light';
-        setTheme(savedTheme);
+//change1start
+async function init() {
+    setTheme(localStorage.getItem('jee_theme') || 'light');
 
-        // Data Load
+    try {
+        // 1. Try to pull the latest syllabus.json from the folder
+        const response = await fetch('syllabus.json');
+        if (response.ok) {
+            syllabus = await response.json();
+            console.log("Loaded data from syllabus.json");
+        }
+    } catch (err) {
+        console.warn("Could not fetch syllabus.json, falling back to local storage.", err);
         const savedSyllabus = localStorage.getItem('jee_syllabus_struct');
         syllabus = savedSyllabus ? JSON.parse(savedSyllabus) : JSON.parse(JSON.stringify(defaultData));
-
-        const savedProgress = localStorage.getItem('jee_progress_state');
-        progressState = savedProgress ? JSON.parse(savedProgress) : {};
-
-        renderAll();
-        updateGlobalStats();
-        randomQuote();
     }
+
+    // Load progress, tasks, and tests from localStorage as usual
+    progressState = JSON.parse(localStorage.getItem('jee_progress_state') || '{}');
+    tasks = JSON.parse(localStorage.getItem('jee_tasks') || '[]');
+    tests = JSON.parse(localStorage.getItem('jee_tests') || '[]');
+
+    renderAll();
+    updateGlobalStats();
+    randomQuote();
+}
+
+async function saveToFile() {
+    const dataToSave = JSON.stringify({ syllabus, progress: progressState, tasks, tests }, null, 2);
+
+    try {
+        // This opens a dialog. If you select 'syllabus.json', it will overwrite it.
+        const handle = await window.showSaveFilePicker({
+            suggestedName: 'syllabus.json',
+            types: [{
+                description: 'JSON File',
+                accept: {'application/json': ['.json']},
+            }],
+        });
+
+        const writable = await handle.createWritable();
+        await writable.write(dataToSave);
+        await writable.close();
+        alert("File saved successfully!");
+    } catch (err) {
+        console.error("Save cancelled or failed", err);
+    }
+}
+//change1end
 
     function saveToLocal() {
         localStorage.setItem('jee_syllabus_struct', JSON.stringify(syllabus));
         localStorage.setItem('jee_progress_state', JSON.stringify(progressState));
+        localStorage.setItem('jee_tasks', JSON.stringify(tasks));
+        localStorage.setItem('jee_tests', JSON.stringify(tests));
         updateGlobalStats();
     }
 
@@ -328,14 +501,19 @@
         renderSubject('physics', 'physics-content');
         renderSubject('maths', 'maths-content');
         renderChemistry();
+        renderNotebook();
+        renderTasks();
+        renderTests();
     }
 
     function renderSubject(subjKey, containerId) {
         const container = document.getElementById(containerId);
         container.innerHTML = "";
         for (const [category, chapters] of Object.entries(syllabus[subjKey])) {
+            // Category Header if needed, skipping for simple subjects
             chapters.forEach((chapter, index) => {
-                container.appendChild(createChapterCard(chapter, `${subjKey}-${category}-${index}`, subjKey, category, index));
+                const uniqueId = `${subjKey}-${category}-${index}`.replace(/\s+/g, '-');
+                container.appendChild(createChapterCard(chapter, uniqueId, subjKey, category, index));
             });
             container.appendChild(createAddChapterUI(subjKey, category));
         }
@@ -349,29 +527,47 @@
             header.className = "chem-category-title";
             header.innerText = cat;
             container.appendChild(header);
-            syllabus.chemistry[cat].forEach((chapter, index) => {
-                container.appendChild(createChapterCard(chapter, `chemistry-${cat}-${index}`, 'chemistry', cat, index));
-            });
-            container.appendChild(createAddChapterUI('chemistry', cat));
+
+            if(syllabus.chemistry[cat]) {
+                syllabus.chemistry[cat].forEach((chapter, index) => {
+                    const uniqueId = `chemistry-${cat}-${index}`.replace(/\s+/g, '-');
+                    container.appendChild(createChapterCard(chapter, uniqueId, 'chemistry', cat, index));
+                });
+                container.appendChild(createAddChapterUI('chemistry', cat));
+            }
         });
     }
 
     function createChapterCard(chapter, id, subject, category, index) {
         const card = document.createElement('div');
         card.className = "chapter-card";
+
+        // State Keys
+        const starKey = `star-${id}`;
+        const isStarred = progressState[starKey] || false;
+
+        // Chapter Level Legacy Checkboxes
         const c1 = `${id}-c1`, c2 = `${id}-c2`, c3 = `${id}-c3`;
 
         card.innerHTML = `
             <div class="chapter-header" onclick="toggleTopics('${id}')">
-                <span class="chapter-title">${chapter.name}</span>
-                <div class="check-group" onclick="event.stopPropagation()">
-                    <input type="checkbox" class="custom-check c1" ${progressState[c1]?'checked':''} onchange="updateCheck('${c1}', this)">
-                    <input type="checkbox" class="custom-check c2" ${progressState[c2]?'checked':''} onchange="updateCheck('${c2}', this)">
-                    <input type="checkbox" class="custom-check c3" ${progressState[c3]?'checked':''} onchange="updateCheck('${c3}', this)">
+                <div class="header-left">
+                    <button class="star-btn ${isStarred ? 'active' : ''}" onclick="toggleStar(event, '${id}')">★</button>
+                    <span class="chapter-title">${chapter.name}</span>
+                </div>
+
+                <div class="chapter-tools" onclick="event.stopPropagation()">
+                    <button class="todo-add-btn" onclick="addTodoFromChapter('${chapter.name}')">+ Todo</button>
+                    <div class="check-group">
+                        <input type="checkbox" title="Theory Done" class="custom-check c1" ${progressState[c1]?'checked':''} onchange="updateCheck('${c1}', this)">
+                        <input type="checkbox" title="Notes Revised" class="custom-check c2" ${progressState[c2]?'checked':''} onchange="updateCheck('${c2}', this)">
+                        <input type="checkbox" title="PYQs Done" class="custom-check c3" ${progressState[c3]?'checked':''} onchange="updateCheck('${c3}', this)">
+                    </div>
                 </div>
             </div>
+
             <div class="topics-list" id="topics-${id}">
-                ${chapter.topics.map(t => `<div class="topic-item">• ${t}</div>`).join('')}
+                ${chapter.topics.map((t, tIdx) => createTopicRow(t, id, tIdx)).join('')}
                 <div class="add-area">
                     <input type="text" class="add-input" placeholder="New topic..." id="in-${id}">
                     <button class="add-btn" onclick="addTopic('${subject}','${category}',${index},'${id}')">+</button>
@@ -380,20 +576,58 @@
         return card;
     }
 
+    function createTopicRow(topicName, chapterId, topicIndex) {
+        // Unique keys for topic state
+        const doneKey = `t-done-${chapterId}-${topicIndex}`;
+        const revKey = `t-rev-${chapterId}-${topicIndex}`;
+        const qsKey = `t-qs-${chapterId}-${topicIndex}`;
+
+        const isDone = progressState[doneKey] || false;
+        const revCount = progressState[revKey] || 0;
+        const isQs = progressState[qsKey] || false;
+
+        return `
+        <div class="topic-row">
+            <span class="topic-name">${topicName}</span>
+            <div class="topic-controls">
+                <label class="t-check-label">
+                    <input type="checkbox" ${isDone?'checked':''} onchange="updateTopicState('${doneKey}', this.checked)"> Done
+                </label>
+
+                <button class="rev-counter-btn" onclick="incrementRev('${revKey}', this)">
+                    Rev: ${revCount}
+                </button>
+
+                <label class="t-check-label">
+                    <input type="checkbox" ${isQs?'checked':''} onchange="updateTopicState('${qsKey}', this.checked)"> Qs
+                </label>
+            </div>
+        </div>
+        `;
+    }
+
     function createAddChapterUI(sub, cat) {
         const div = document.createElement('div');
         div.className = "add-area";
         div.style.padding = "0 10px 20px 10px";
         div.innerHTML = `
-            <input type="text" class="add-input" placeholder="Add Chapter..." id="new-${sub}-${cat}">
+            <input type="text" class="add-input" placeholder="Add Chapter to ${cat}..." id="new-${sub}-${cat}">
             <button class="add-btn" onclick="addNewChapter('${sub}','${cat}')">Add</button>`;
         return div;
     }
 
-    // --- Actions ---
+    // --- Action Logic ---
     function toggleTopics(id) {
         const el = document.getElementById(`topics-${id}`);
         el.style.display = el.style.display === 'block' ? 'none' : 'block';
+    }
+
+    function toggleStar(e, id) {
+        e.stopPropagation();
+        const k = `star-${id}`;
+        progressState[k] = !progressState[k];
+        saveToLocal();
+        renderAll(); // Re-render to update Star UI and Notebook
     }
 
     function updateCheck(id, el) {
@@ -401,10 +635,26 @@
         saveToLocal();
     }
 
+    function updateTopicState(key, val) {
+        progressState[key] = val;
+        saveToLocal();
+    }
+
+    function incrementRev(key, btn) {
+        let val = (progressState[key] || 0) + 1;
+        progressState[key] = val;
+        btn.innerText = `Rev: ${val}`;
+        saveToLocal();
+    }
+
     function addNewChapter(sub, cat) {
-        const val = document.getElementById(`new-${sub}-${cat}`).value;
+        const inputId = `new-${sub}-${cat}`;
+        const val = document.getElementById(inputId).value;
         if(!val) return;
+
+        if(!syllabus[sub][cat]) syllabus[sub][cat] = [];
         syllabus[sub][cat].push({ name: val, topics: [] });
+        document.getElementById(inputId).value = "";
         saveToLocal(); renderAll();
     }
 
@@ -416,13 +666,145 @@
         document.getElementById(`topics-${uiId}`).style.display = 'block';
     }
 
+    // --- Notebook Logic ---
+    function renderNotebook() {
+        const container = document.getElementById('starred-list');
+        container.innerHTML = "";
+
+        // Scan all chapters for stars
+        let found = false;
+        const scan = (sub) => {
+            const categories = syllabus[sub];
+            for(let cat in categories) {
+                categories[cat].forEach((chap, idx) => {
+                    const id = `${sub}-${cat}-${idx}`.replace(/\s+/g, '-');
+                    if(progressState[`star-${id}`]) {
+                        found = true;
+                        // Clone the card for display, but strip edit/add buttons for cleaner view
+                        // Or simply re-use createChapterCard
+                        const card = createChapterCard(chap, id, sub, cat, idx);
+                        container.appendChild(card);
+                    }
+                });
+            }
+        };
+
+        scan('physics'); scan('chemistry'); scan('maths');
+
+        if(!found) container.innerHTML = "<div style='text-align:center;color:var(--text-light)'>No starred chapters yet.</div>";
+    }
+
+    // --- Task Logic ---
+    function addTodoFromChapter(chapName) {
+        const task = { text: `Revise ${chapName}`, tag: chapName, done: false, id: Date.now() };
+        tasks.push(task);
+        saveToLocal();
+        alert(`Added "${task.text}" to Tasks tab`);
+        renderTasks();
+    }
+
+    function addTaskManual() {
+        const input = document.getElementById('new-task-input');
+        if(!input.value) return;
+        tasks.push({ text: input.value, tag: 'General', done: false, id: Date.now() });
+        input.value = "";
+        saveToLocal();
+        renderTasks();
+    }
+
+    function toggleTask(id) {
+        const t = tasks.find(x => x.id === id);
+        if(t) t.done = !t.done;
+        saveToLocal();
+        renderTasks();
+    }
+
+    function deleteTask(id) {
+        tasks = tasks.filter(x => x.id !== id);
+        saveToLocal();
+        renderTasks();
+    }
+
+    function renderTasks() {
+        const container = document.getElementById('todo-list-container');
+        container.innerHTML = "";
+        tasks.sort((a,b) => a.done - b.done); // Done items at bottom
+
+        tasks.forEach(t => {
+            const div = document.createElement('div');
+            div.className = "task-item";
+            div.style.opacity = t.done ? '0.5' : '1';
+            div.innerHTML = `
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <input type="checkbox" ${t.done?'checked':''} onchange="toggleTask(${t.id})">
+                    <div>
+                        <span class="task-meta">${t.tag}</span>
+                        <span style="${t.done?'text-decoration:line-through':''}">${t.text}</span>
+                    </div>
+                </div>
+                <button onclick="deleteTask(${t.id})" style="background:none;border:none;color:#e74c3c;cursor:pointer;">✕</button>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    // --- Test Logic ---
+    function addTestScore() {
+        const name = document.getElementById('test-name').value || "Unknown Test";
+        const date = document.getElementById('test-date').value || new Date().toISOString().slice(0,10);
+        const p = Number(document.getElementById('score-p').value) || 0;
+        const c = Number(document.getElementById('score-c').value) || 0;
+        const m = Number(document.getElementById('score-m').value) || 0;
+        const max = Number(document.getElementById('score-total-max').value) || 300;
+
+        tests.unshift({ name, date, p, c, m, max }); // Add to top
+        saveToLocal();
+        renderTests();
+
+        // Clear inputs
+        document.getElementById('score-p').value = '';
+        document.getElementById('score-c').value = '';
+        document.getElementById('score-m').value = '';
+    }
+
+    function renderTests() {
+        const container = document.getElementById('test-history');
+        container.innerHTML = "";
+
+        tests.forEach((t, idx) => {
+            const total = t.p + t.c + t.m;
+            const perc = Math.round((total / t.max) * 100);
+
+            const div = document.createElement('div');
+            div.className = "test-history-item";
+            div.innerHTML = `
+                <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                    <strong>${t.name}</strong>
+                    <span style="font-size:0.8rem; opacity:0.7">${t.date}</span>
+                </div>
+                <div style="margin-bottom:8px;">
+                    <span class="score-pill score-p">P: ${t.p}</span>
+                    <span class="score-pill score-c">C: ${t.c}</span>
+                    <span class="score-pill score-m">M: ${t.m}</span>
+                    <span style="float:right; font-weight:bold;">${total}/${t.max}</span>
+                </div>
+                <div style="background:rgba(0,0,0,0.1); height:6px; border-radius:3px; overflow:hidden;">
+                    <div style="width:${perc}%; background:var(--primary); height:100%;"></div>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    // --- Utilities ---
     function switchTab(sub) {
-        document.querySelectorAll('.tab-btn, .subject-section').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.subject-section').forEach(el => el.classList.remove('active'));
+
         document.querySelector(`.tab-btn[data-subject="${sub}"]`).classList.add('active');
         document.getElementById(`${sub}-content`).classList.add('active');
     }
 
-    // --- Dark Mode ---
     function toggleTheme() {
         const current = document.body.getAttribute('data-theme');
         const next = current === 'light' ? 'dark' : 'light';
@@ -432,12 +814,50 @@
     function setTheme(theme) {
         document.body.setAttribute('data-theme', theme);
         localStorage.setItem('jee_theme', theme);
-        document.getElementById('theme-btn').innerText = theme === 'light' ? '🌙 Dark Mode' : '☀️ Light Mode';
+        document.getElementById('theme-btn').innerText = theme === 'light' ? '🌙' : '☀️';
     }
 
-    // --- Data Export/Import ---
+    function updateGlobalStats() {
+        // Count total topics vs topics done
+        let totalTopics = 0;
+        let topicsDone = 0;
+
+        const count = (obj, subKey) => {
+            for(let cat in obj) {
+                obj[cat].forEach((chap, cIdx) => {
+                   chap.topics.forEach((t, tIdx) => {
+                       totalTopics++;
+                       const id = `${subKey}-${cat}-${cIdx}`.replace(/\s+/g, '-');
+                       if(progressState[`t-done-${id}-${tIdx}`]) topicsDone++;
+                   });
+                });
+            }
+        };
+
+        count(syllabus.physics, 'physics');
+        count(syllabus.chemistry, 'chemistry');
+        count(syllabus.maths, 'maths');
+
+        const p = totalTopics ? Math.round((topicsDone/totalTopics)*100) : 0;
+        document.getElementById('global-progress').style.width = p+'%';
+        document.getElementById('stats-text').innerText = `${p}% Topics Completed`;
+    }
+
+    // Timer
+    let timerInt;
+    let seconds = 1500;
+    function toggleTimer() {
+        if(timerInt) { clearInterval(timerInt); timerInt = null; return; }
+        timerInt = setInterval(() => {
+            seconds--;
+            const m = Math.floor(seconds/60), s = seconds%60;
+            document.getElementById('timer-display').innerText = `${m}:${s<10?'0':''}${s}`;
+            if(seconds <= 0) { clearInterval(timerInt); alert("Time's up!"); }
+        }, 1000);
+    }
+
     function exportData() {
-        const data = { syllabus, progress: progressState };
+        const data = { syllabus, progress: progressState, tasks, tests };
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -453,9 +873,11 @@
         reader.onload = (e) => {
             try {
                 const imported = JSON.parse(e.target.result);
-                if(imported.syllabus && imported.progress) {
+                if(imported.syllabus) {
                     syllabus = imported.syllabus;
-                    progressState = imported.progress;
+                    progressState = imported.progress || {};
+                    tasks = imported.tasks || [];
+                    tests = imported.tests || [];
                     saveToLocal();
                     location.reload();
                 } else {
@@ -466,38 +888,13 @@
         reader.readAsText(file);
     }
 
-    // --- Timer & Stats ---
-    let timerInt;
-    let seconds = 1500;
-    function toggleTimer() {
-        if(timerInt) { clearInterval(timerInt); timerInt = null; return; }
-        timerInt = setInterval(() => {
-            seconds--;
-            const m = Math.floor(seconds/60), s = seconds%60;
-            document.getElementById('timer-display').innerText = `${m}:${s<10?'0':''}${s}`;
-            if(seconds <= 0) { clearInterval(timerInt); alert("Time's up!"); }
-        }, 1000);
-    }
-
-    function updateGlobalStats() {
-        let total = 0, done = 0;
-        const count = (obj) => {
-            for(let k in obj) Array.isArray(obj[k]) ? total += obj[k].length : count(obj[k]);
-        };
-        count(syllabus);
-        Object.values(progressState).forEach(v => v && done++);
-        const p = total ? Math.round((done/(total*3))*100) : 0;
-        document.getElementById('global-progress').style.width = p+'%';
-        document.getElementById('stats-text').innerText = p + '% Completion';
-    }
-
     function randomQuote() {
-        const q = ["Success is not final, failure is not fatal.", "Don't watch the clock; do what it does. Keep going.", "Focus on the goal, not the obstacle."];
+        const q = ["Success is not final, failure is not fatal.", "Don't watch the clock; do what it does.", "Dream big and dare to fail."];
         document.getElementById('quote-display').innerText = q[Math.floor(Math.random()*q.length)];
     }
 
     function resetAllData() {
-        if(confirm("Delete everything?")) { localStorage.clear(); location.reload(); }
+        if(confirm("Delete ALL data? This cannot be undone.")) { localStorage.clear(); location.reload(); }
     }
 
     window.onload = init;

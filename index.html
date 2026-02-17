@@ -319,6 +319,90 @@
             border-top: 2px dashed var(--border);
             text-align: center;
         }
+        #todo-list-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .todo-group {
+            background: var(--card-bg);
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+        .todo-group-header {
+            background: rgba(0,0,0,0.05);
+            padding: 10px 15px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            cursor: pointer;
+        }
+
+        /* Modern Circular Checkbox (To-Do Style) */
+        .modern-checkbox {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--primary);
+            border-radius: 50%; /* Circular like the screenshot */
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s;
+        }
+        .modern-checkbox:checked {
+            background: var(--primary);
+        }
+        .modern-checkbox:checked::after {
+            content: '✓';
+            color: white;
+            position: absolute;
+            font-size: 12px;
+            left: 4px;
+            top: 0px;
+        }
+
+        /* Modern Revision Pill */
+        .rev-pill {
+            background: rgba(67, 97, 238, 0.1);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .rev-pill:hover { background: var(--primary); color: white; }
+
+        /* Clean Todo Layout (Screenshot Style) */
+        .todo-group {
+            background: var(--card-bg);
+            border-radius: 12px;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid var(--border);
+        }
+        .todo-group-header {
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0,0,0,0.02);
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            font-weight: 700;
+        }
+        .hidden { display: none; }
+
+        @keyframes highlight-fade {
+            0% { background-color: rgba(76, 201, 240, 0.3); }
+            100% { background-color: var(--card-bg); }
+        }
+
+        .highlight-pick {
+            animation: highlight-fade 3s ease-out;
+        }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -339,9 +423,15 @@
 </header>
 
 <div class="controls-bar">
+
+    <div class="tool-card">
+        <button class="btn-small" onclick="pickRandomRevision()" style="background:var(--success); color:white;">🔀 Pick Topics for Me</button>
+    </div>
+
     <div class="tool-card">
         ⏱ <span id="timer-display">25:00</span>
         <button class="btn-small" onclick="toggleTimer()">Start/Stop</button>
+        <button class="btn-small" onclick="resetTimer()" style="background:var(--text-light)">Reset</button>
     </div>
 
     <div class="tool-card">
@@ -613,16 +703,18 @@ const defaultData = {
         <div class="topic-row">
             <span class="topic-name">${topicName}</span>
             <div class="topic-controls">
+                <button class="todo-add-btn" onclick="addTodoFromTopic('${topicName}', '${chapterId}')" title="Add to Tasks">+</button>
+
                 <label class="t-check-label">
-                    <input type="checkbox" ${isDone?'checked':''} onchange="updateTopicState('${doneKey}', this.checked)"> Done
+                    <input type="checkbox" class="modern-checkbox" ${isDone?'checked':''} onchange="updateTopicState('${doneKey}', this.checked)"> Done
                 </label>
 
-                <button class="rev-counter-btn" onclick="incrementRev('${revKey}', this)">
+                <button class="rev-pill" onclick="incrementRev('${revKey}', this)">
                     Rev: ${revCount}
                 </button>
 
                 <label class="t-check-label">
-                    <input type="checkbox" ${isQs?'checked':''} onchange="updateTopicState('${qsKey}', this.checked)"> Qs
+                    <input type="checkbox" class="modern-checkbox" ${isQs?'checked':''} onchange="updateTopicState('${qsKey}', this.checked)"> Qs
                 </label>
             </div>
         </div>
@@ -726,6 +818,16 @@ const defaultData = {
         renderTasks();
     }
 
+    function addTodoFromTopic(topicName, chapterId) {
+        // Find chapter name for the tag
+        const chapTitle = document.querySelector(`#topics-${chapterId}`).previousElementSibling.querySelector('.chapter-title').innerText;
+        const task = { text: topicName, tag: chapTitle, done: false, id: Date.now() };
+        tasks.push(task);
+        saveToLocal();
+        alert(`Added topic to tasks!`);
+        renderTasks();
+    }
+
     function addTaskManual() {
         const input = document.getElementById('new-task-input');
         if(!input.value) return;
@@ -735,40 +837,61 @@ const defaultData = {
         renderTasks();
     }
 
-    function toggleTask(id) {
-        const t = tasks.find(x => x.id === id);
-        if(t) t.done = !t.done;
+    function deleteTask(id) {
+        // Convert both to strings to avoid "Large Number" precision errors in JS
+        tasks = tasks.filter(t => String(t.id) !== String(id));
         saveToLocal();
         renderTasks();
     }
 
-    function deleteTask(id) {
-        tasks = tasks.filter(x => x.id !== id);
-        saveToLocal();
-        renderTasks();
+    function toggleTask(id) {
+        const task = tasks.find(t => String(t.id) === String(id));
+        if (task) {
+            task.done = !task.done;
+            saveToLocal();
+            renderTasks();
+        }
     }
 
     function renderTasks() {
         const container = document.getElementById('todo-list-container');
         container.innerHTML = "";
-        tasks.sort((a,b) => a.done - b.done); // Done items at bottom
 
-        tasks.forEach(t => {
-            const div = document.createElement('div');
-            div.className = "task-item";
-            div.style.opacity = t.done ? '0.5' : '1';
-            div.innerHTML = `
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <input type="checkbox" ${t.done?'checked':''} onchange="toggleTask(${t.id})">
-                    <div>
-                        <span class="task-meta">${t.tag}</span>
-                        <span style="${t.done?'text-decoration:line-through':''}">${t.text}</span>
-                    </div>
+        if (tasks.length === 0) {
+            container.innerHTML = "<div style='text-align:center; padding:20px; opacity:0.5;'>No tasks yet.</div>";
+            return;
+        }
+
+        // Group tasks by their Tag (Chapter Name)
+        const grouped = tasks.reduce((acc, t) => {
+            if (!acc[t.tag]) acc[t.tag] = [];
+            acc[t.tag].push(t);
+            return acc;
+        }, {});
+
+        for (const [tag, items] of Object.entries(grouped)) {
+            const groupDiv = document.createElement('div');
+            groupDiv.className = "todo-group";
+            groupDiv.innerHTML = `
+                <div class="todo-group-header" onclick="this.nextElementSibling.classList.toggle('hidden')">
+                    <span style="font-size:0.8rem; margin-right:8px;">📂</span>
+                    <span>${tag}</span>
+                    <span style="margin-left:auto; font-size:0.75rem; opacity:0.6;">${items.length} items</span>
                 </div>
-                <button onclick="deleteTask(${t.id})" style="background:none;border:none;color:#e74c3c;cursor:pointer;">✕</button>
+                <div class="todo-items-list">
+                    ${items.map(t => `
+                        <div class="task-item">
+                            <div style="display:flex; align-items:center; gap:12px; flex:1;">
+                                <input type="checkbox" class="modern-checkbox" ${t.done ? 'checked' : ''} onchange="toggleTask('${t.id}')">
+                                <span style="${t.done ? 'text-decoration:line-through; opacity:0.5' : ''}">${t.text}</span>
+                            </div>
+                            <button onclick="deleteTask('${t.id}')" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:1.1rem; padding:0 5px;">✕</button>
+                        </div>
+                    `).join('')}
+                </div>
             `;
-            container.appendChild(div);
-        });
+            container.appendChild(groupDiv);
+        }
     }
 
     // --- Test Logic ---
@@ -841,43 +964,71 @@ const defaultData = {
     }
 
     function updateGlobalStats() {
-        // Count total topics vs topics done
         let totalTopics = 0;
         let topicsDone = 0;
 
-        const count = (obj, subKey) => {
-            for(let cat in obj) {
-                obj[cat].forEach((chap, cIdx) => {
-                   chap.topics.forEach((t, tIdx) => {
-                       totalTopics++;
-                       const id = `${subKey}-${cat}-${cIdx}`.replace(/\s+/g, '-');
-                       if(progressState[`t-done-${id}-${tIdx}`]) topicsDone++;
-                   });
+        // Use the actual syllabus object instead of 'allTopics'
+        Object.keys(syllabus).forEach(subKey => {
+            const subject = syllabus[subKey];
+            Object.keys(subject).forEach(cat => {
+                subject[cat].forEach((chap, cIdx) => {
+                    // Ensure the chapId matches the one generated in createTopicRow
+                    const chapId = `${subKey}-${cat}-${cIdx}`.replace(/\s+/g, '-');
+                    chap.topics.forEach((topic, tIdx) => {
+                        totalTopics++;
+                        if (progressState[`t-done-${chapId}-${tIdx}`]) {
+                            topicsDone++;
+                        }
+                    });
                 });
-            }
-        };
+            });
+        });
 
-        count(syllabus.physics, 'physics');
-        count(syllabus.chemistry, 'chemistry');
-        count(syllabus.maths, 'maths');
+        const percent = totalTopics ? Math.round((topicsDone / totalTopics) * 100) : 0;
 
-        const p = totalTopics ? Math.round((topicsDone/totalTopics)*100) : 0;
-        document.getElementById('global-progress').style.width = p+'%';
-        document.getElementById('stats-text').innerText = `${p}% Topics Completed`;
+        // Safety check for the elements
+        const bar = document.getElementById('global-progress');
+        const text = document.getElementById('stats-text');
+        if(bar) bar.style.width = percent + '%';
+        if(text) text.innerText = `${percent}% Syllabus Completed`;
     }
 
     // Timer
-    let timerInt;
-    let seconds = 1500;
-    function toggleTimer() {
-        if(timerInt) { clearInterval(timerInt); timerInt = null; return; }
+let timerRunning = false;
+let seconds = 1500; // 25 minutes
+
+function toggleTimer() {
+    if (timerRunning) {
+        clearInterval(timerInt);
+        timerRunning = false;
+    } else {
+        timerRunning = true;
         timerInt = setInterval(() => {
+            if (seconds <= 0) {
+                clearInterval(timerInt);
+                alert("Session complete! Take a break.");
+                return;
+            }
             seconds--;
-            const m = Math.floor(seconds/60), s = seconds%60;
-            document.getElementById('timer-display').innerText = `${m}:${s<10?'0':''}${s}`;
-            if(seconds <= 0) { clearInterval(timerInt); alert("Time's up!"); }
+            updateTimerDisplay();
         }, 1000);
     }
+}
+
+function updateTimerDisplay() {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    document.getElementById('timer-display').innerText =
+        `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+}
+
+// Add a Reset button in your HTML tool-card to call this:
+function resetTimer() {
+    clearInterval(timerInt);
+    timerRunning = false;
+    seconds = 1500;
+    updateTimerDisplay();
+}
 
     function exportData() {
         const data = { syllabus, progress: progressState, tasks, tests };
@@ -896,17 +1047,25 @@ const defaultData = {
         reader.onload = (e) => {
             try {
                 const imported = JSON.parse(e.target.result);
-                if(imported.syllabus) {
-                    syllabus = imported.syllabus;
-                    progressState = imported.progress || {};
+
+                // Check if it's our format
+                if (imported.progressState || imported.syllabus) {
+                    // Restore all 4 main data pieces
+                    syllabus = imported.syllabus || syllabus;
+                    progressState = imported.progressState || imported.progress || {};
                     tasks = imported.tasks || [];
                     tests = imported.tests || [];
+
                     saveToLocal();
+                    alert("Import Successful! Reloading...");
                     location.reload();
                 } else {
-                    alert("Invalid JSON format!");
+                    alert("Invalid Backup File!");
                 }
-            } catch (err) { alert("Error reading file!"); }
+            } catch (err) {
+                console.error(err);
+                alert("Error reading file! Make sure it's a valid JSON.");
+            }
         };
         reader.readAsText(file);
     }
@@ -918,6 +1077,67 @@ const defaultData = {
 
     function resetAllData() {
         if(confirm("Delete ALL data? This cannot be undone.")) { localStorage.clear(); location.reload(); }
+    }
+    function resetTimer() {
+        if(timerInt) { clearInterval(timerInt); timerInt = null; }
+        seconds = 1500; // Resets to 25 mins
+        const m = Math.floor(seconds/60), s = seconds%60;
+        document.getElementById('timer-display').innerText = `${m}:${s<10?'0':''}${s}`;
+    }
+
+    function pickRandomRevision() {
+        const completedTopics = [];
+
+        // Loop through all subjects, categories, and chapters
+        Object.keys(syllabus).forEach(subKey => {
+            const subject = syllabus[subKey];
+            Object.keys(subject).forEach(cat => {
+                subject[cat].forEach((chap, cIdx) => {
+                    const chapId = `${subKey}-${cat}-${cIdx}`.replace(/\s+/g, '-');
+
+                    chap.topics.forEach((topic, tIdx) => {
+                        const doneKey = `t-done-${chapId}-${tIdx}`;
+                        // Only pick topics that are marked as 'Done'
+                        if (progressState[doneKey]) {
+                            completedTopics.push({
+                                name: topic,
+                                subject: subKey,
+                                chapterId: chapId,
+                                chapterName: chap.name
+                            });
+                        }
+                    });
+                });
+            });
+        });
+
+        if (completedTopics.length === 0) {
+            alert("No completed topics found! Mark some topics as 'Done' first.");
+            return;
+        }
+
+        const pick = completedTopics[Math.floor(Math.random() * completedTopics.length)];
+
+        // 1. Switch to the correct tab (Physics/Chem/Math)
+        switchTab(pick.subject);
+
+        // 2. Open the chapter dropdown
+        const topicArea = document.getElementById(`topics-${pick.chapterId}`);
+        if (topicArea) {
+            topicArea.classList.remove('hidden'); // Ensure it's visible
+            topicArea.style.display = 'block';
+
+            // 3. Scroll to the chapter and highlight it
+            topicArea.parentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            // Visual feedback
+            topicArea.parentElement.style.outline = "2px solid var(--success)";
+            setTimeout(() => {
+                topicArea.parentElement.style.outline = "none";
+            }, 3000);
+        }
+
+        alert(`Time to revise: ${pick.name}\n(Chapter: ${pick.chapterName})`);
     }
 
     window.onload = init;

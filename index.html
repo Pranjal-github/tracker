@@ -395,6 +395,49 @@
         }
         .hidden { display: none; }
 
+        /* Toast Notification Animation */
+        .toast-notify {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--success);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 1000;
+            animation: slideUpFade 2s forwards;
+        }
+
+        @keyframes slideUpFade {
+            0% { opacity: 0; bottom: 80px; }
+            20% { opacity: 1; bottom: 100px; }
+            80% { opacity: 1; bottom: 100px; }
+            100% { opacity: 0; bottom: 120px; }
+        }
+
+        /* Subject-Specific Task Colors */
+        .task-item.physics { border-left: 4px solid var(--phy); }
+        .task-item.chemistry { border-left: 4px solid var(--chem); }
+        .task-item.maths { border-left: 4px solid var(--maths); }
+        .task-item.general { border-left: 4px solid var(--text-light); }
+
+        .task-tag-pill {
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-right: 8px;
+            text-transform: uppercase;
+            font-weight: bold;
+            color: white;
+        }
+        .bg-physics { background: var(--phy); }
+        .bg-chemistry { background: var(--chem); }
+        .bg-maths { background: var(--math); }
+        .bg-general { background: var(--text-light); }
+
         @keyframes highlight-fade {
             0% { background-color: rgba(76, 201, 240, 0.3); }
             100% { background-color: var(--card-bg); }
@@ -670,7 +713,7 @@ const defaultData = {
                 </div>
 
                 <div class="chapter-tools" onclick="event.stopPropagation()">
-                    <button class="todo-add-btn" onclick="addTodoFromChapter('${chapter.name}')">+ Todo</button>
+                    <button class="todo-add-btn" onclick="addTodoFromChapter('${chapter.name}', '${subject}')">+ Todo</button>
                     <div class="check-group">
                         <input type="checkbox" title="Theory Done" class="custom-check c1" ${progressState[c1]?'checked':''} onchange="updateCheck('${c1}', this)">
                         <input type="checkbox" title="Notes Revised" class="custom-check c2" ${progressState[c2]?'checked':''} onchange="updateCheck('${c2}', this)">
@@ -680,7 +723,7 @@ const defaultData = {
             </div>
 
             <div class="topics-list" id="topics-${id}">
-                ${chapter.topics.map((t, tIdx) => createTopicRow(t, id, tIdx)).join('')}
+                ${chapter.topics.map((t, tIdx) => createTopicRow(t, id, tIdx, subject)).join('')}
                 <div class="add-area">
                     <input type="text" class="add-input" placeholder="New topic..." id="in-${id}">
                     <button class="add-btn" onclick="addTopic('${subject}','${category}',${index},'${id}')">+</button>
@@ -689,7 +732,7 @@ const defaultData = {
         return card;
     }
 
-    function createTopicRow(topicName, chapterId, topicIndex) {
+    function createTopicRow(topicName, chapterId, topicIndex, subject) {
         // Unique keys for topic state
         const doneKey = `t-done-${chapterId}-${topicIndex}`;
         const revKey = `t-rev-${chapterId}-${topicIndex}`;
@@ -703,7 +746,7 @@ const defaultData = {
         <div class="topic-row">
             <span class="topic-name">${topicName}</span>
             <div class="topic-controls">
-                <button class="todo-add-btn" onclick="addTodoFromTopic('${topicName}', '${chapterId}')" title="Add to Tasks">+</button>
+                <button class="todo-add-btn" onclick="addTodoFromTopic('${topicName.replace(/'/g, "\\'")}', '${chapterId}', '${subject}')" title="Add to Tasks">+</button>
 
                 <label class="t-check-label">
                     <input type="checkbox" class="modern-checkbox" ${isDone?'checked':''} onchange="updateTopicState('${doneKey}', this.checked)"> Done
@@ -810,21 +853,41 @@ const defaultData = {
     }
 
     // --- Task Logic ---
-    function addTodoFromChapter(chapName) {
-        const task = { text: `Revise ${chapName}`, tag: chapName, done: false, id: Date.now() };
+    // Helper for the animation instead of alert()
+    function showToast(message) {
+        const toast = document.createElement('div');
+        toast.className = 'toast-notify';
+        toast.innerText = `✅ ${message}`;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 2000);
+    }
+
+    function addTodoFromChapter(chapName, subject) {
+        const task = {
+            text: `Revise ${chapName}`,
+            tag: chapName,
+            subject: subject || 'general',
+            done: false,
+            id: Date.now()
+        };
         tasks.push(task);
         saveToLocal();
-        alert(`Added "${task.text}" to Tasks tab`);
+        showToast("Added Chapter to Tasks!"); // Replaced alert
         renderTasks();
     }
 
-    function addTodoFromTopic(topicName, chapterId) {
-        // Find chapter name for the tag
+    function addTodoFromTopic(topicName, chapterId, subject) {
         const chapTitle = document.querySelector(`#topics-${chapterId}`).previousElementSibling.querySelector('.chapter-title').innerText;
-        const task = { text: topicName, tag: chapTitle, done: false, id: Date.now() };
+        const task = {
+            text: topicName,
+            tag: chapTitle,
+            subject: subject || 'general',
+            done: false,
+            id: Date.now()
+        };
         tasks.push(task);
         saveToLocal();
-        alert(`Added topic to tasks!`);
+        showToast("Topic added to Tasks!"); // Replaced alert
         renderTasks();
     }
 
@@ -862,7 +925,6 @@ const defaultData = {
             return;
         }
 
-        // Group tasks by their Tag (Chapter Name)
         const grouped = tasks.reduce((acc, t) => {
             if (!acc[t.tag]) acc[t.tag] = [];
             acc[t.tag].push(t);
@@ -870,17 +932,20 @@ const defaultData = {
         }, {});
 
         for (const [tag, items] of Object.entries(grouped)) {
+            // Use the subject of the first item in the group for the header color
+            const groupSub = items[0].subject || 'general';
+
             const groupDiv = document.createElement('div');
-            groupDiv.className = "todo-group";
+            groupDiv.className = `todo-group ${groupSub}`;
             groupDiv.innerHTML = `
-                <div class="todo-group-header" onclick="this.nextElementSibling.classList.toggle('hidden')">
-                    <span style="font-size:0.8rem; margin-right:8px;">📂</span>
+                <div class="todo-group-header">
+                    <span class="task-tag-pill bg-${groupSub}">${groupSub}</span>
                     <span>${tag}</span>
                     <span style="margin-left:auto; font-size:0.75rem; opacity:0.6;">${items.length} items</span>
                 </div>
                 <div class="todo-items-list">
                     ${items.map(t => `
-                        <div class="task-item">
+                        <div class="task-item ${t.subject}">
                             <div style="display:flex; align-items:center; gap:12px; flex:1;">
                                 <input type="checkbox" class="modern-checkbox" ${t.done ? 'checked' : ''} onchange="toggleTask('${t.id}')">
                                 <span style="${t.done ? 'text-decoration:line-through; opacity:0.5' : ''}">${t.text}</span>
